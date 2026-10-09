@@ -126,6 +126,10 @@ class EntraAPIClient:
                 if not re.search(r'\b' + field + r'\s+(?:ge|gt)\s+', str(params.get('$filter', '')), re.I):
                     raise ValueError('An explicit event-time lower bound is required')
             headers = {}
+            if operation.get('require_count'):
+                # Some relationships require count + eventual consistency even for simple reads.
+                params['$count'] = 'true'
+                headers['ConsistencyLevel'] = 'eventual'
             if operation.get('advanced_query') and (any(key in params for key in ('$filter', '$search', '$count', '$orderby')) or '/microsoft.graph.' in endpoint):
                 headers['ConsistencyLevel'] = 'eventual'
                 if '$count' in operation['parameters']['optional']:

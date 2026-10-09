@@ -135,3 +135,240 @@ MEMBERSHIPS = [
     ('user', 'list_groups', '/users/{user_id}/memberOf/microsoft.graph.group', 'user-list-memberof', False),
     ('user', 'list_transitive_groups', '/users/{user_id}/transitiveMemberOf/microsoft.graph.group', 'user-list-transitivememberof', True),
 ]
+
+# Common administrator workflows. Relationships keep the parent's routing entity,
+# but override its response type and meaning instead of inheriting object notes.
+RESOURCES.update({
+    'delegated_grant': {
+        'type': 'oAuth2PermissionGrant', 'permission': 'Directory.Read.All',
+        'fields': 'id clientId resourceId consentType principalId scope',
+        'description': 'Delegated OAuth consent grants: which client may act for which users and with which scopes.',
+        'interpretation': 'clientId and resourceId are service principal object ids, not application/client appIds. scope is a space-separated set of delegated permission names. AllPrincipals means tenant-wide consent; Principal scopes consent to principalId. These are delegated grants, not app-only app role assignments or proof of token use.',
+        'retrieval': 'Filter by clientId with eq when looking up one enterprise app. Resolve resourceId using service_principal.get. New grants can be delayed by replication. Do not request write permission to read consent.',
+        'source': 'oauth2permissiongrant-list',
+    },
+    'named_location': {
+        'type': 'namedLocation', 'permission': 'Policy.Read.All',
+        'fields': 'id displayName createdDateTime modifiedDateTime isTrusted ipRanges countriesAndRegions includeUnknownCountriesAndRegions',
+        'description': 'Named IP or country locations referenced by Conditional Access policies.',
+        'interpretation': 'Use @odata.type to distinguish IP and country locations; their properties differ. Join location id to policy conditions.locations include/exclude lists. All and AllTrusted are special policy selectors, not location ids. A trusted location alone does not grant access.',
+        'retrieval': 'Conditional Access feature availability applies; planned for P1. Retrieve location definitions only when needed to explain targeting. Do not infer a user location from a named-location definition.',
+        'source': 'conditionalaccessroot-list-namedlocations',
+        'availability': 'Conditional Access; Entra P1/P2 or applicable feature entitlement.',
+    },
+    'authentication_strength': {
+        'type': 'authenticationStrengthPolicy', 'permission': 'Policy.Read.AuthenticationMethod',
+        'fields': 'id displayName description policyType requirementsSatisfied allowedCombinations createdDateTime modifiedDateTime',
+        'description': 'Built-in and custom authentication strengths referenced by Conditional Access grant controls.',
+        'interpretation': 'Join id to grantControls.authenticationStrength.id. allowedCombinations describes acceptable method combinations, not the methods a user has registered or used. Preserve builtIn versus custom policies.',
+        'retrieval': 'Policy.Read.All is a documented higher read-only alternative. Conditional Access use requires applicable feature entitlement. Compare policy configuration with registration or sign-in evidence only when that evidence is available.',
+        'source': 'authenticationstrengthroot-list-policies',
+        'availability': 'Authentication strengths; Conditional Access use requires applicable P1/P2 entitlement.',
+    },
+    'authentication_policy': {
+        'type': 'authenticationMethodsPolicy', 'permission': 'Policy.Read.AuthenticationMethod',
+        'fields': 'id displayName description lastModifiedDateTime policyVersion policyMigrationState authenticationMethodConfigurations registrationEnforcement',
+        'description': 'Tenant authentication-method policy, method configurations, target groups and registration enforcement.',
+        'interpretation': 'This singleton is policy configuration, not a per-user registration report. Inspect each method configuration type, state, includeTargets and excludeTargets. Enabled for a target does not prove a user registered or successfully used that method. Preserve method-specific nested settings.',
+        'retrieval': 'Read the singleton without collection assumptions. Policy.Read.All is a documented higher read-only alternative. Method availability depends on tenant licensing and rollout. Use the registration report for population questions.',
+        'source': 'authenticationmethodspolicy-get',
+        'availability': 'Method-specific tenant feature and licensing requirements apply.',
+    },
+    'administrative_unit': {
+        'type': 'administrativeUnit', 'permission': 'AdministrativeUnit.Read.All',
+        'fields': 'id displayName description visibility membershipType membershipRule membershipRuleProcessingState isMemberManagementRestricted',
+        'description': 'Administrative units used to scope directory administration.',
+        'interpretation': 'An administrative unit groups objects for administrative scope; it is not an access-granting security group. Join directory role assignment directoryScopeId to the unit id when the scope is /administrativeUnits/{id}. Membership is a separate relationship.',
+        'retrieval': 'Preserve restricted-management and dynamic-membership properties when present. Membership rules are configuration rather than proof of evaluated membership. Missing feature-specific fields remain unknown.',
+        'source': 'directory-list-administrativeunits',
+        'availability': 'Administrative units; scoped administration and dynamic features have separate licensing requirements.',
+    },
+    'organization': {
+        'type': 'organization', 'permission': 'Organization.Read.All',
+        'fields': 'id displayName tenantType verifiedDomains assignedPlans onPremisesSyncEnabled onPremisesLastSyncDateTime',
+        'description': 'The configured tenant organization, verified domains and reported plan/sync metadata.',
+        'interpretation': 'The list returns a collection containing the current tenant organization. assignedPlans is tenant plan metadata, not per-user license assignment or complete billing evidence. Preserve unknown hybrid-sync fields.',
+        'retrieval': 'Use explicit $select. Never broaden the query to another tenant. Organization id is the tenant id; use it for the detail lookup.',
+        'source': 'organization-list',
+    },
+    'domain': {
+        'type': 'domain', 'permission': 'Domain.Read.All',
+        'fields': 'id authenticationType isDefault isInitial isRoot isVerified supportedServices state',
+        'description': 'Tenant domains and their verification, default and authentication-type settings.',
+        'interpretation': 'id is the domain name, not a GUID. Managed/Federated describes domain configuration, not whether any particular sign-in succeeds. Verification does not prove current DNS health.',
+        'retrieval': 'List and filter locally: Graph documents issues with domain $search, $top and $filter. This catalog permits only $select. No DNS validation or domain mutation is performed.',
+        'source': 'domain-list',
+    },
+    'subscribed_sku': {
+        'type': 'subscribedSku', 'permission': 'LicenseAssignment.Read.All',
+        'fields': 'id skuId skuPartNumber capabilityStatus consumedUnits prepaidUnits servicePlans appliesTo',
+        'description': 'Subscribed license SKUs and service plans, with enabled and consumed unit counts.',
+        'interpretation': 'Join user assignedLicenses.skuId to skuId, not subscribedSku.id. Detail lookups use the opaque subscribedSku.id returned by the list. consumedUnits and prepaidUnits are service-reported counts, not invoice or effective-access proof. Preserve suspended/warning capacity separately.',
+        'retrieval': 'List supports only $select in this catalog; detail supports no query parameters. Organization.Read.All and Directory.Read.All are documented higher read-only alternatives. Use selected user assignedLicenses, assignedPlans and licenseAssignmentStates for user-level evidence; licenseDetails is not in the app-only catalog.',
+        'source': 'subscribedsku-list',
+    },
+})
+
+OPERATIONS.extend([
+    ('user', 'list_direct_reports', '/users/{user_id}/directReports', '$select $filter $count'),
+    ('user', 'list_app_role_assignments', '/users/{user_id}/appRoleAssignments', '$select $filter $count'),
+    ('user', 'list_authentication_methods', '/users/{user_id}/authentication/methods', ''),
+    ('group', 'list_owners', '/groups/{group_id}/owners', '$select $filter $search $count $top'),
+    ('group', 'list_parent_groups', '/groups/{group_id}/memberOf', '$select $filter $search $count $top'),
+    ('group', 'list_transitive_parent_groups', '/groups/{group_id}/transitiveMemberOf', '$select $filter $search $count $top'),
+    ('group', 'list_app_role_assignments', '/groups/{group_id}/appRoleAssignments', '$select $filter $top'),
+    ('device', 'list_registered_owners', '/devices/{device_id}/registeredOwners', '$select'),
+    ('device', 'list_registered_users', '/devices/{device_id}/registeredUsers', '$select'),
+    ('application', 'list_owners', '/applications/{application_id}/owners', '$select'),
+    ('service_principal', 'list_owners', '/servicePrincipals/{service_principal_id}/owners', '$select $count'),
+    ('service_principal', 'list_app_role_assignments', '/servicePrincipals/{service_principal_id}/appRoleAssignments', '$select $filter $top'),
+    ('delegated_grant', 'list', '/oauth2PermissionGrants', '$filter'),
+    ('named_location', 'list', '/identity/conditionalAccess/namedLocations', ''),
+    ('named_location', 'get', '/identity/conditionalAccess/namedLocations/{location_id}', ''),
+    ('authentication_strength', 'list', '/policies/authenticationStrengthPolicies', '$filter'),
+    ('authentication_strength', 'get', '/policies/authenticationStrengthPolicies/{strength_id}', ''),
+    ('authentication_policy', 'get', '/policies/authenticationMethodsPolicy', ''),
+    ('role_assignment', 'get', '/roleManagement/directory/roleAssignments/{assignment_id}', '$select'),
+    ('administrative_unit', 'list', '/directory/administrativeUnits', '$select $filter'),
+    ('administrative_unit', 'get', '/directory/administrativeUnits/{unit_id}', '$select'),
+    ('administrative_unit', 'list_members', '/directory/administrativeUnits/{unit_id}/members', '$select'),
+    ('organization', 'list', '/organization', '$select'),
+    ('organization', 'get', '/organization/{organization_id}', '$select'),
+    ('domain', 'list', '/domains', '$select'),
+    ('domain', 'get', '/domains/{domain_id}', '$select'),
+    ('subscribed_sku', 'list', '/subscribedSkus', '$select'),
+    ('subscribed_sku', 'get', '/subscribedSkus/{sku_id}', ''),
+])
+
+LIMITED_OBJECTS = ('Preserve id and @odata.type. Permission-limited objects may contain only identity/type and null properties. '
+                   'Keep these rows as unknown detail, not nonexistent objects; resolving another type may require its own read permission. ')
+
+OVERRIDES = {
+    'user.list_direct_reports': {
+        'type': 'directoryObject', 'fields': 'id displayName userPrincipalName',
+        'description': 'Immediate user/contact reports for a specified manager.',
+        'interpretation': LIMITED_OBJECTS + 'Only immediate reports are returned, not the entire reporting tree. Match ids rather than display names.',
+        'retrieval': 'Resolve the manager as a user, then read directReports. For a manager lookup without a supported direct manager operation, an explicitly bounded enumeration of users and their directReports can establish inverse relationships; a three-row discovery sample cannot establish no manager exists.',
+        'source': 'user-list-directreports',
+    },
+    'user.list_app_role_assignments': {
+        **RESOURCES['app_role_assignment'], 'permission': 'Directory.Read.All',
+        'description': 'App role assignments granted to a user, including grants through groups they directly belong to.',
+        'interpretation': 'Results can include assignments granted to groups where the user is a direct member. Do not label every row a direct user assignment. Preserve principalId/principalType, join resourceId to service principal id and appRoleId to the resource appRoles. Nested groups do not confer these app assignments. Assignment is not effective access.',
+        'retrieval': 'Use ConsistencyLevel eventual and $count=true as documented to include all assignments for users with many direct memberships. The adapter adds these for this operation. If Directory.Read.All is not consented, an alternative is app_role_assignment.list per known resource and direct group memberships; report its actual coverage.',
+        'source': 'user-list-approleassignments', 'require_count': True,
+    },
+    'user.list_authentication_methods': {
+        'type': 'authenticationMethod', 'permission': 'UserAuthenticationMethod.Read.All', 'fields': 'id @odata.type',
+        'description': 'Optional targeted inventory of methods registered to one user.',
+        'interpretation': 'Use @odata.type to distinguish method kinds. Subtypes have different fields and may expose sensitive contact details; report only the fields needed. Registration does not establish MFA use, policy eligibility or sign-in success. This API does not cover every possible authentication mechanism.',
+        'retrieval': 'No query parameters. Requires separately consented method-read permission. For tenant-wide registration audits use mfa_registration.list, not repeated per-user method reads. No secrets or recovery-key endpoints are provided.',
+        'source': 'authentication-list-methods', 'advanced_query': False,
+        'availability': 'Optional targeted method inventory; separately consent UserAuthenticationMethod.Read.All.',
+    },
+    'group.list_owners': {
+        'type': 'directoryObject', 'permission': 'GroupMember.Read.All', 'fields': 'id displayName userPrincipalName',
+        'description': 'Owners returned for a group, with Graph v1.0 owner-visibility limitations.',
+        'interpretation': LIMITED_OBJECTS + 'Owners need not be members. v1.0 currently omits service-principal owners. Owners are unavailable for Exchange-created, distribution and on-premises-synchronized groups; an empty response is not universal proof that a group is ownerless.',
+        'retrieval': 'Use this relationship for ownership, not members. State the documented coverage limitation in ownerless-group reports.',
+        'source': 'group-list-owners',
+    },
+    'group.list_app_role_assignments': {
+        **RESOURCES['app_role_assignment'], 'permission': 'Directory.Read.All',
+        'description': 'Enterprise application app roles assigned to a group.',
+        'interpretation': 'The parent group is the assignee. resourceId identifies the enterprise application; join appRoleId to that resource appRoles. Only direct user members benefit from group-based app assignments; nested groups do not confer the grant.',
+        'retrieval': 'Requires group-based assignment feature entitlement (P1/P2). Directory.Read.All is the read-only permission for this relationship. Resource-side app_role_assignment.list remains an alternative for known applications.',
+        'source': 'group-list-approleassignments', 'advanced_query': False,
+        'availability': 'Group-based app assignments require P1/P2.',
+    },
+    'service_principal.list_app_role_assignments': {
+        **RESOURCES['app_role_assignment'],
+        'description': 'Application permissions granted to a client service principal on resource APIs.',
+        'interpretation': 'The parent service principal is the client/assignee; resourceId is the target API service principal. Join appRoleId to that resource appRoles. These are app-only grants, distinct from appRoleAssignedTo (who is assigned to this app) and delegated OAuth scopes. Requested permissions on an application registration are not proof of consent.',
+        'retrieval': 'Resolve client object id first. Read resource service principals to translate permission ids. Retain unresolved resource ids instead of dropping grants.',
+        'source': 'serviceprincipal-list-approleassignments', 'advanced_query': False,
+    },
+    'administrative_unit.list_members': {
+        'type': 'directoryObject', 'fields': 'id displayName',
+        'description': 'Objects directly included in an administrative unit.',
+        'interpretation': LIMITED_OBJECTS + 'Adding a group to a unit does not automatically make every group member a unit member. This relationship indicates administrative scope, not application access.',
+        'retrieval': 'Read all pages and retain user, group and device types separately. Hidden membership can require Member.Read.Hidden.',
+        'source': 'administrativeunit-list-members',
+    },
+}
+
+for operation, source, meaning in [
+    ('list_parent_groups', 'group-list-memberof', 'Direct parent group and administrative-unit memberships of this group.'),
+    ('list_transitive_parent_groups', 'group-list-transitivememberof', 'Transitive group memberships of this group, including nested parent groups.'),
+]:
+    OVERRIDES[f'group.{operation}'] = {
+        'type': 'directoryObject', 'permission': 'GroupMember.ReadBasic.All', 'fields': 'id displayName',
+        'description': meaning,
+        'interpretation': LIMITED_OBJECTS + 'These are containers the group belongs to, not its members. Transitive nesting does not confer group-based app assignments.',
+        'retrieval': 'Advanced queries use eventual consistency and $count. Inspect returned object type before interpreting a scope or relationship.',
+        'source': source,
+    }
+
+for operation, source, meaning in [
+    ('list_registered_owners', 'device-list-registeredowners', 'Users recorded as registered owners of the device.'),
+    ('list_registered_users', 'device-list-registeredusers', 'Users recorded as registered users of the device.'),
+]:
+    OVERRIDES[f'device.{operation}'] = {
+        'type': 'directoryObject', 'fields': 'id displayName userPrincipalName', 'description': meaning,
+        'interpretation': LIMITED_OBJECTS + 'The parent device_id is its directory object id, not deviceId. Registration is not proof of current usage or an Intune primary-user assignment.',
+        'retrieval': 'For a user-to-device question, enumerate the relevant devices and match user ids in this relationship. A sample or failed parent read cannot establish that a user has no devices. Preserve pagination and unknown owner details.',
+        'source': source,
+    }
+
+for entity, source in [('application', 'application-list-owners'), ('service_principal', 'serviceprincipal-list-owners')]:
+    OVERRIDES[f'{entity}.list_owners'] = {
+        'type': 'directoryObject', 'fields': 'id displayName userPrincipalName',
+        'description': f'Owners of the {entity.replace("_", " ")} object.',
+        'interpretation': LIMITED_OBJECTS + 'Application registration owners and enterprise application owners are distinct relationships. Ownership is not an app-role assignment.',
+        'retrieval': 'Use the parent object id, not appId. Do not assume owners are identical across a matching application and service principal.',
+        'source': source,
+    }
+OVERRIDES['service_principal.list_owners']['require_count'] = True
+OVERRIDES['service_principal.list_owners']['retrieval'] += ' Graph requires advanced-query headers and count for selected owner properties; the adapter supplies them.'
+
+# Detail provenance must point to the detail contract, not its list counterpart.
+for entity, source in {
+    'user': 'user-get', 'group': 'group-get', 'device': 'device-get',
+    'application': 'application-get', 'service_principal': 'serviceprincipal-get',
+    'directory_role': 'unifiedroledefinition-get', 'role_assignment': 'unifiedroleassignment-get',
+    'conditional_access': 'conditionalaccesspolicy-get', 'sign_in': 'signin-get',
+    'directory_audit': 'directoryaudit-get', 'named_location': 'namedlocation-get',
+    'authentication_strength': 'authenticationstrengthpolicy-get',
+    'administrative_unit': 'administrativeunit-get', 'organization': 'organization-get',
+    'domain': 'domain-get', 'subscribed_sku': 'subscribedsku-get',
+}.items():
+    OVERRIDES.setdefault(f'{entity}.get', {})['source'] = source
+
+RESOURCES['user']['fields'] += ' assignedLicenses assignedPlans licenseAssignmentStates'
+RESOURCES['user']['interpretation'] += ' Join assignedLicenses.skuId to subscribed_sku.skuId. licenseAssignmentStates can distinguish direct versus group licensing and assignment errors. Missing selected properties remain unknown; do not infer licenseDetails support.'
+RESOURCES['device']['retrieval'] += ' For user associations use device.list_registered_owners or device.list_registered_users and match user object ids; user-side device relationships are not admitted in this app-only catalog.'
+for entity in ('application', 'service_principal'):
+    RESOURCES[entity]['fields'] += ' passwordCredentials keyCredentials'
+    RESOURCES[entity]['retrieval'] = ('Use explicit selection for credential expiry metadata: keyId, displayName, startDateTime and endDateTime inside passwordCredentials/keyCredentials. '
+        'A GET does not recover secretText. Selecting keyCredentials can also return public key bytes; omit those from answers and report only expiry metadata. '
+        'Selecting keyCredentials has separate throttling limits; keep reads bounded. ' + RESOURCES[entity]['retrieval'].replace('Credentials and secrets are not part of this catalog projection. ', ''))
+
+RESOURCES['conditional_access']['availability'] = 'Conditional Access; Entra P1/P2 or applicable feature entitlement.'
+RESOURCES['conditional_access']['interpretation'] += ' Application targeting commonly uses application appId values, not service principal object ids. Resolve named-location ids through named_location reads and grantControls.authenticationStrength.id through authentication_strength.get. Preserve special selectors and exclusions.'
+RESOURCES['mfa_registration']['availability'] = 'Authentication methods reporting requires P1/P2; data is report-delayed and can omit disabled/deleted users.'
+RESOURCES['sign_in']['availability'] = 'Sign-in report access requires P1/P2; retention and consent constrain evidence. Risk detail may require P2.'
+RESOURCES['directory_audit']['availability'] = 'Available retained audit events; retention and permissions constrain the requested window.'
+
+SYNC_SUPPORT = {
+    'user.list': 'Snapshot: users; selected base fields and configured custom attributes only.',
+    'group.list': 'Snapshot: groups; selected metadata only.',
+    'group.list_members': 'Snapshot: direct group_memberships; documented v1.0 type limitations.',
+    'application.list': 'Snapshot: applications; selected metadata, no credential inventory.',
+    'service_principal.list': 'Snapshot: service_principals; selected metadata, no owner/credential inventory.',
+    'app_role_assignment.list': 'Snapshot: app_role_assignments; resource-side assignments.',
+    'mfa_registration.list': 'Optional snapshot: mfa_registrations via SYNC_MFA_REGISTRATION.',
+    'directory_role.list': 'Optional snapshot: directory_roles via SYNC_DIRECTORY_ROLES.',
+    'role_assignment.list': 'Optional snapshot: role_assignments via SYNC_DIRECTORY_ROLES.',
+    'conditional_access.list': 'Optional snapshot: conditional_access_policies via SYNC_CONDITIONAL_ACCESS.',
+    'device.list': 'Optional snapshot: devices via SYNC_DEVICES; no user associations.',
+}

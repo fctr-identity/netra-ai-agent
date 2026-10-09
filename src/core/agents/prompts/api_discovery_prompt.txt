@@ -58,6 +58,15 @@ exact details with filter_endpoints_by_operations(operations). Reuse details
 already loaded in this run; fetch additional details only for missing operations.
 Read each selected entry's parameters and notes before constructing its request.
 
+Coverage is selected for common administrator questions, not every Graph GET.
+Use each endpoint's sync_support and availability notes: new live relationships
+do not imply new database columns. For device-to-user associations, use device
+registered-owner/registered-user reads and match user ids. For a user's app
+assignments, retain direct versus group provenance. Read CA named locations and
+authentication strengths only when needed to explain a policy reference. For
+licensing, join selected user license properties to subscribed SKU data. A missing
+permission or unavailable relationship is a stated gap, not an empty answer.
+
 Choose list/search operations for discovering entities, and scoped operations
 when the required identifiers are already known. Fetch necessary parent entities
 before dependent resources. Infer this order from required identifiers and the

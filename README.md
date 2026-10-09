@@ -61,15 +61,26 @@ and [client credentials flow](https://learn.microsoft.com/en-us/entra/identity-p
 | Read scope | Microsoft Graph application permissions |
 | --- | --- |
 | Users, groups, direct memberships; Teams group authorization | `User.Read.All`, `Group.Read.All` |
-| Enterprise apps, app registrations, app-role assignments | `Application.Read.All` |
+| Enterprise apps, app registrations, resource-side app-role assignments and owners | `Application.Read.All` |
 | MFA registration reports, sign-in and directory audit reads | `AuditLog.Read.All` |
 | Optional directory role definitions and assignments | `RoleManagement.Read.Directory` |
 | Optional Conditional Access policies | `Policy.Read.All` |
-| Optional directory device inventory | `Device.Read.All` |
+| Optional directory device inventory and registered owners/users | `Device.Read.All` |
+| Optional user/group app assignments and delegated consent grants | `Directory.Read.All` |
+| Optional parent-group membership reads | `GroupMember.ReadBasic.All` (see endpoint notes and documented read alternatives) |
+| Optional authentication strengths and authentication-method policy | `Policy.Read.AuthenticationMethod` (`Policy.Read.All` is a documented alternative) |
+| Optional targeted user authentication-method inventory | `UserAuthenticationMethod.Read.All` |
+| Optional administrative units and their members | `AdministrativeUnit.Read.All` |
+| Optional tenant organization, domains, license SKUs | `Organization.Read.All`, `Domain.Read.All`, `LicenseAssignment.Read.All`, respectively |
 
 Grant only the scopes you enable. Hidden group membership additionally needs
 `Member.Read.Hidden`. Permission failures are reported as unavailable evidence,
 not as empty data. Netra does not need Graph write permissions.
+
+The expanded live-read catalog does not increase the default sync permission set.
+See the [complete supported endpoint list](docs/SUPPORTED_GRAPH_READS.md) for each
+operation's use, permission, availability, and sync coverage. New relationships,
+tenant details, consent grants, and method policies are live reads in this version.
 
 5. In **API permissions**, select **Grant admin consent** for your tenant and
    confirm that each requested application permission shows **Granted for** that
@@ -193,7 +204,7 @@ artifacts. Set `INSTALL_TEAMS_BOT=true` when building a Teams-enabled image. Use
 ## Runtime boundaries and data
 
 The agent receives local descriptions, notes, parameters, and JSON response
-contracts for **25 approved GET operations**, not the entire Microsoft Graph API.
+contracts for **53 approved GET operations**, not the entire Microsoft Graph API.
 The SDK adapter restricts directory traffic to those v1.0 paths on the commercial
 Graph host and handles pagination/retries. OAuth token acquisition is separate
 from the read-only directory calls. No agent browser or arbitrary HTTP tool is

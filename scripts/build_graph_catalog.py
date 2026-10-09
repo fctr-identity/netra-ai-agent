@@ -8,7 +8,7 @@ import json
 import re
 from pathlib import Path
 import yaml
-from graph_catalog_notes import RESOURCES, OPERATIONS, MEMBERSHIPS, REVISION, REVIEWED
+from graph_catalog_notes import RESOURCES, OPERATIONS, MEMBERSHIPS, OVERRIDES, SYNC_SUPPORT, REVISION, REVIEWED
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -24,7 +24,8 @@ def clean(value):
     return value
 
 
-def build(source, output):
+def build(source, output, docs_output=None):
+    docs_output = docs_output or ROOT / 'docs'
     spec = yaml.load(source.read_text(encoding='utf-8-sig'), Loader=yaml.CSafeLoader)
 
     def deref(value):
@@ -45,6 +46,7 @@ def build(source, output):
         operations.append((entity, operation, path, '$select $filter $search $count $top'))
 
     for entity, operation, path, query in operations:
+        key = f'{entity}.{operation}'
         config = dict(RESOURCES[entity])
         membership = next((item for item in MEMBERSHIPS if item[0:2] == (entity, operation)), None)
         if membership:
@@ -54,6 +56,7 @@ def build(source, output):
             config['interpretation'] = 'Preserve object id and @odata.type. Different member object types cannot all be treated as users. Transitive reads flatten nested membership; direct reads retain only immediate relationships. Group membership alone does not establish app assignments or successful access. Permission-limited members may contain only id/type; keep those objects and mark unknown properties.'
             config['retrieval'] = 'Resolve the parent id only when unknown. Advanced membership queries require ConsistencyLevel eventual and $count=true; the adapter supplies these headers. Hidden memberships require Member.Read.Hidden. The v1.0 direct members endpoint has a documented service-principal omission; Netra reports this limitation and does not silently call beta. Do not call a partial membership inventory complete for service-principal questions. Nested membership does not confer group-based enterprise app assignment.'
             config['permission'] = 'GroupMember.Read.All' if entity == 'group' else 'User.Read.All'
+        config.update(OVERRIDES.get(key, {}))
         # Microsoft's OpenAPI uses the graph alias for fully qualified casts.
         source_key = re.sub(r'\{[^}]+\}', '{}', path).replace('/microsoft.graph.', '/graph.')
         upstream_path, path_item = normalized[source_key]
@@ -63,9 +66,10 @@ def build(source, output):
         allowed = query.split()
         if set(allowed) - available:
             raise ValueError(f'{path}: unlisted upstream parameters {set(allowed) - available}')
-        key = f'{entity}.{operation}'
         wanted = config['fields'].split()
         collection = operation != 'get'
+        availability = config.get('availability', 'Commercial Entra tenant; consent and resource availability required.')
+        sync_support = SYNC_SUPPORT.get(key, 'Live only; this operation adds no synchronized fields or relationships.')
         required = re.findall(r'\{([^}]+)\}', path)
         parameter_lines = [f'* {name} (path, required): Graph object id of the named parent; use a known id directly.' for name in required]
         for parameter in parameters:
@@ -81,13 +85,17 @@ def build(source, output):
             '* Failed reads return status=error, error=message, error_code=code, http_status=number or null, complete=false. Never interpret a failure as empty data.',
             '', '## Interpretation and Related Data', interpretation, '', '## Retrieval Notes',
             f"* Application permission: {config['permission']}. Availability still depends on tenant features and consent.", config['retrieval'],
+            f'* Availability: {availability}', f'* Local storage: {sync_support}',
             '* Page size is not a total count. The adapter handles paging. Check status and complete; preserve errors rather than returning an empty list.',
             '* OData string literals escape an apostrophe by doubling it. Pass parameters separately; do not construct an absolute URL. Keep all requests read only.'])
         endpoint = {'id': key, 'entity': entity, 'operation': operation, 'name': f"{operation.replace('_', ' ').title()} {entity.replace('_', ' ')}",
             'method': 'GET', 'url_pattern': path, 'description': config['description'],
             'parameters': {'required': required, 'optional': allowed}, 'depends_on': [],
             'application_permissions': [config['permission']], 'notes': clean(notes),
-            'response': {'collection': collection}, 'advanced_query': entity in {'user', 'group', 'device', 'application', 'service_principal'}}
+            'response': {'collection': collection},
+            'availability': availability, 'sync_support': sync_support,
+            'advanced_query': config.get('advanced_query', entity in {'user', 'group', 'device', 'application', 'service_principal'}),
+            'require_count': config.get('require_count', False)}
         endpoints.append(endpoint)
         sources.append({'operation': key, 'upstream_path': upstream_path, 'operation_id': upstream['operationId'],
                         'documentation': f"https://learn.microsoft.com/en-us/graph/api/{config['source']}?view=graph-rest-1.0"})
@@ -100,11 +108,25 @@ def build(source, output):
         if re.search(r'https?://|www\.', content):
             raise ValueError('External link in generated catalog')
         (output / name).write_text(content, encoding='utf-8')
-    provenance = ROOT / 'docs/graph_catalog_sources.json'
-    provenance.parent.mkdir(exist_ok=True)
+    provenance = docs_output / 'graph_catalog_sources.json'
+    provenance.parent.mkdir(parents=True, exist_ok=True)
     provenance.write_text(json.dumps({'revision': REVISION, 'reviewed': REVIEWED,
         'source': f'https://github.com/microsoftgraph/msgraph-metadata/blob/{REVISION}/openapi/v1.0/openapi.yaml',
         'license': 'MIT; see THIRD_PARTY_NOTICES.md', 'operations': sources}, indent=2) + '\n', encoding='utf-8')
+    lines = ['# Supported Graph reads', '',
+        f'{len(endpoints)} approved GET operations, generated from the reviewed catalog. All paths are relative to Microsoft Graph v1.0.', '',
+        'These operations are implemented in the catalog and shared SDK adapter. Offline contract checks do not establish live tenant consent or availability.',
+        'Permissions below are read-only app permissions selected for each operation, not a request to consent every capability. Read the endpoint notes for higher read-only alternatives and field-level limitations.',
+        'Live-only additions do not change the database schema or sync jobs. Detail operations may read objects whose selected fields are also available from existing snapshots.', '',
+        '| Operation | GET path | Administrator use | Application permission | Availability | Sync |',
+        '| --- | --- | --- | --- | --- | --- |']
+    for endpoint in sorted(endpoints, key=lambda entry: entry['id']):
+        columns = [endpoint['id'], endpoint['url_pattern'], endpoint['description'],
+                   ', '.join(endpoint['application_permissions']), endpoint['availability'], endpoint['sync_support']]
+        lines.append('| ' + ' | '.join(value.replace('|', '\\|') for value in columns) + ' |')
+    lines.extend(['', 'Maintainer sources and operation IDs: [provenance](graph_catalog_sources.json).',
+                  'Scope, deliberate exclusions and regeneration: [catalog guide](GRAPH_CATALOG.md).', ''])
+    (docs_output / 'SUPPORTED_GRAPH_READS.md').write_text('\n'.join(lines), encoding='utf-8')
     print(f'Generated {len(endpoints)} supported GET operations and response descriptions.')
 
 
@@ -112,5 +134,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', type=Path, required=True)
     parser.add_argument('--output', type=Path, default=ROOT / 'src/data/schemas')
+    parser.add_argument('--docs-output', type=Path, default=ROOT / 'docs')
     args = parser.parse_args()
-    build(args.source, args.output)
+    build(args.source, args.output, args.docs_output)
