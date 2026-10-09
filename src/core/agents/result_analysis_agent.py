@@ -12,6 +12,7 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
+from types import SimpleNamespace
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_ai import RunContext, UsageLimits
@@ -32,7 +33,7 @@ from src.data.schemas.artifact_manifest import (
     append_artifacts_to_file,
 )
 from src.utils.logging import get_logger
-from src.utils.security_config import validate_result_analysis_code
+from src.utils.security_config import GENERATED_MODULE_EXPORTS, validate_result_analysis_code
 from src.utils.timezone_context import timezone_instructions
 
 logger = get_logger("netra_ai_agent")
@@ -476,6 +477,9 @@ def _execute_analysis_code(
     selected_result_set_ids: List[str],
     user_timezone: Optional[str] = None,
 ) -> ResultAnalysisExecutionOutput:
+    validation = validate_result_analysis_code(python_code)
+    if not validation.is_valid:
+        raise ValueError("Analysis code failed security validation")
     result_sets = {
         result_set_id: _load_result_records(candidate["storage_path"])
         for result_set_id, candidate in selected_candidates.items()
@@ -514,9 +518,7 @@ def _execute_analysis_code(
             "map",
             "filter",
             "isinstance",
-            "type",
             "repr",
-            "format",
         )
     }
 
@@ -524,8 +526,8 @@ def _execute_analysis_code(
         "__builtins__": safe_builtins,
         "Counter": Counter,
         "defaultdict": defaultdict,
-        "json": json,
-        "re": re,
+        "json": SimpleNamespace(**{name: getattr(json, name) for name in GENERATED_MODULE_EXPORTS['json']}),
+        "re": SimpleNamespace(**{name: getattr(re, name) for name in GENERATED_MODULE_EXPORTS['re']}),
         "datetime": datetime,
         "timedelta": timedelta,
         "timezone": timezone,

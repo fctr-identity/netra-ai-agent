@@ -147,47 +147,34 @@ def write_turn_summary(paths: RuntimeTurnPaths, summary: Dict[str, Any]) -> None
 
 def prepare_runtime_script_code(code: str) -> str:
     """Make generated scripts portable regardless of execution staging folder."""
+    from src.utils.security_config import validate_generated_code
+
+    # All staging paths (including CLI/export) admit the original source here.
+    # A comment supplied by the model must never skip trusted initialization.
+    validation = validate_generated_code(code)
+    if not validation.is_valid:
+        raise ValueError("Generated script failed security validation")
     modified_code = code.replace(
         "from src.core.entra.client.base_graph_client import EntraAPIClient",
         "from base_graph_client import EntraAPIClient",
     )
-    modified_code = modified_code.replace(
-        'script_dir.parent / "sqlite_db" / "netra.db"',
-        'project_root / "sqlite_db" / "netra.db"',
-    )
-    modified_code = modified_code.replace(
-        "script_dir.parent / 'sqlite_db' / 'netra.db'",
-        "project_root / 'sqlite_db' / 'netra.db'",
-    )
-    modified_code = modified_code.replace(
-        "await client.session.close()",
-        "await client.close_session()",
-    )
-    modified_code = modified_code.replace(
-        "await entra_client.session.close()",
-        "await entra_client.close_session()",
-    )
-
-    if "# === Netra Runtime Bootstrap ===" in modified_code:
-        return modified_code
-
     bootstrap = '''# === Netra Runtime Bootstrap ===
-import sys as _netra_sys
-from pathlib import Path as _NetraPath
-
-def _netra_find_project_root():
-    _path = _NetraPath(__file__).resolve().parent
-    while _path != _path.parent:
-        if (_path / "requirements.txt").exists() and (_path / "src/core/entra").is_dir():
-            return _path
-        _path = _path.parent
-    return _NetraPath.cwd()
-
-project_root = _netra_find_project_root()
-_netra_script_dir = _NetraPath(__file__).resolve().parent
-for _netra_path in (_netra_script_dir, project_root):
-    if str(_netra_path) not in _netra_sys.path:
-        _netra_sys.path.insert(0, str(_netra_path))
+def _netra_bootstrap():
+    import sys
+    from pathlib import Path
+    script_dir = Path(__file__).resolve().parent
+    root = script_dir
+    while root != root.parent:
+        if (root / "requirements.txt").exists() and (root / "src/core/entra").is_dir():
+            break
+        root = root.parent
+    else:
+        root = Path.cwd()
+    for path in (script_dir, root):
+        if str(path) not in sys.path:
+            sys.path.insert(0, str(path))
+_netra_bootstrap()
+del _netra_bootstrap
 # === End Netra Runtime Bootstrap ===
 
 '''

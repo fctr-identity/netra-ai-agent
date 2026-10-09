@@ -133,6 +133,10 @@ Queries and selected directory data are sent to the configured model provider.
 SQLite snapshots, conversation history, generated scripts, results, and logs are
 local sensitive data; keep them out of Git. Generated-code validation and the
 read-only SQL connection are POC guardrails, not an OS sandbox for hostile users.
+Python validators enforce explicit imports/members and calls, reject opaque
+string-format traversal and helper rebinding, and run before script staging or
+saved-result analysis. Prompt instructions are not a security boundary. Accepted
+Python still runs with the application's operating-system privileges.
 
 Assignments are not effective access. MFA registration is not successful MFA use.
 Direct and transitive memberships differ, and nested groups do not confer
