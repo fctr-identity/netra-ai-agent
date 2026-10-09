@@ -1,0 +1,2 @@
+# Only needed to refresh Microsoft's pinned OpenAPI catalog.
+PyYAML>=6.0.3,<7

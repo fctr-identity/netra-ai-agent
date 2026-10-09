@@ -1,0 +1,45 @@
+:root {
+    /* Surfaces - quiet workspace */
+    --bg-page: var(--workspace-canvas); /* Match the outer page to the main workspace. */
+    --bg-gradient: var(--workspace-canvas); /* Legacy alias - now flat. */
+    --surface: #ffffff;
+    --workspace-canvas: #f7fbfa;
+    --workspace-outline: #c6d9d5;
+    --surface-muted: #f0f6f4;
+    --surface-sidebar: #edf5f2;
+    --surface-hover: #e5efeb;
+
+    /* Typography */
+    --text-primary: #142b28;
+    --text-secondary: #4b635d;
+    --text-muted: #6c817a;
+    --text-faint: #b4b4b0;
+
+    /* Netra: teal actions and mint surfaces. */
+    --primary-rgb: 15, 118, 110;
+    --primary: #0f766e;
+    --primary-hover: #115e59;
+    --primary-light: #e7f5f2;
+    --primary-dark: #134e4a;
+    --primary-border: #b9dcd6;
+    --accent-line: var(--primary);
+
+    /* UI Components */
+    --card-bg: #FFFFFF;
+    --border-color: rgba(15, 23, 42, 0.08);   /* Hairline */
+    --border-strong: rgba(15, 23, 42, 0.14);
+
+    /* Layout */
+    --border-radius: 12px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-composer: 24px;
+    --max-width: 1400px;
+    --results-max-width: 1800px;
+
+    /* Shadows - very restrained */
+    --shadow-light: none;
+    --shadow-medium: none;
+    --shadow-floating: none;
+  }

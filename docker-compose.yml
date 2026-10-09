@@ -1,0 +1,17 @@
+services:
+  netra:
+    build:
+      context: .
+      args:
+        INSTALL_TEAMS_BOT: "${INSTALL_TEAMS_BOT:-false}"
+    ports:
+      - "127.0.0.1:8001:8001"
+    env_file: .env
+    volumes:
+      - netra-data:/app/sqlite_db
+      - netra-chats:/app/chat_sessions
+    init: true
+
+volumes:
+  netra-data:
+  netra-chats:
