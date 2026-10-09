@@ -210,7 +210,7 @@ const getExecutionClass = computed(() => {
 .exec-glass { width: 100%; margin: 0; border: 1px solid var(--workspace-outline, #d6dce5); border-radius: 10px; background: #fff; overflow: hidden; }
 .glass-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 11px 14px; background: #fff; border: 0; color: var(--text-secondary, #61646c); cursor: pointer; }
 .glass-header:hover, .script-open:hover { background: #f8f9fa; }
-button:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+button:focus-visible { outline: 2px solid var(--primary, #4c64e2); outline-offset: -2px; }
 .header-main, .header-badges, .script-summary, .script-actions { display: flex; align-items: center; gap: 8px; }
 .header-main { min-width: 0; }
 .header-text { font-size: 14px; font-weight: 600; color: var(--text-primary, #27272a); }
@@ -223,10 +223,10 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; 
 .script-section { margin-bottom: 8px; }
 .script-toggle { display: flex; align-items: center; gap: 8px; }
 .script-open { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 8px; flex: 1; padding: 10px 0; border: 0; background: transparent; cursor: pointer; font-size: 13px; color: var(--text-secondary, #61646c); }
-.script-title { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; background: var(--primary-light); color: var(--primary-dark); font-size: 12px; font-weight: 500; }
+.script-title { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; background: #edf3ff; color: #385ea9; font-size: 12px; font-weight: 500; }
 .script-title svg { flex-shrink: 0; }
 .script-size { color: #626b79; }
-.script-hint { color: var(--primary); }
+.script-hint { color: var(--primary, #4c64e2); }
 .copy-btn { padding: 6px; border: 0; border-radius: 5px; background: transparent; color: var(--text-secondary, #61646c); cursor: pointer; }
 .copy-btn:hover { background: #f3f4f6; }
 .script-code { max-height: 300px; overflow: auto; }
@@ -239,10 +239,10 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; 
 .indicator-dot, .badge-pulse { width: 6px; height: 6px; border-radius: 50%; background: #8b8e97; }
 .indicator-dot.success { background: #16834a; }
 .indicator-dot.error { background: #b42318; }
-.indicator-spinner { width: 12px; height: 12px; border: 2px solid #e4e4e7; border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; }
+.indicator-spinner { width: 12px; height: 12px; border: 2px solid #e4e4e7; border-top-color: var(--primary, #4c64e2); border-radius: 50%; animation: spin .8s linear infinite; }
 .progress-section { display: flex; align-items: center; gap: 8px; }
 .progress-track { flex: 1; height: 3px; background: #e4e4e7; border-radius: 3px; overflow: hidden; }
-.progress-fill { height: 100%; background: var(--primary); transition: width .3s; }
+.progress-fill { height: 100%; background: var(--primary, #4c64e2); transition: width .3s; }
 .progress-fill.indeterminate { width: 30%; animation: indeterminate 1.5s ease-in-out infinite; }
 .progress-pct, .subprocess-note { font-size: 12px; color: #626b79; }
 .subprocess-row { flex-wrap: wrap; }

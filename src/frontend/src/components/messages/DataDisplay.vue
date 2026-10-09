@@ -142,6 +142,7 @@
 
 <script setup>
 import { marked } from 'marked'
+import { sanitizeMarkdownHtml } from './safeMarkdown.js'
 import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import { MessageType } from './messageTypes'
 import ResultTableCell from './ResultTableCell.vue'
@@ -172,7 +173,7 @@ const renderedMarkdown = computed(() => {
         .replace(/\n{3,}/g, '\n\n')
         .replace(/__MD_HEADING_BREAK__/g, '\n');
     
-  return marked.parse(processedContent);
+  return sanitizeMarkdownHtml(marked.parse(processedContent));
 });
 
 // Props with improved type definitions
@@ -636,7 +637,7 @@ watch(() => formattedHeaders.value.map(header => header.key), keys => {
     font-size: 15px;
     color: #374151;
     border-radius: 8px;
-    background: var(--surface-muted);
+    background: #f9faff;
     margin: 0 auto;
     max-width: 800px;
     text-align: center;
@@ -736,7 +737,7 @@ watch(() => formattedHeaders.value.map(header => header.key), keys => {
 }
 .saved-results-btn:hover { background: var(--primary-hover) !important; }
 .download-btn.preview-export { background: #fff !important; color: #405779 !important; border-color: #aebcd0 !important; box-shadow: none; }
-.download-btn.preview-export:hover { background: var(--surface-muted) !important; border-color: var(--primary-border) !important; }
+.download-btn.preview-export:hover { background: #f7f9fd !important; border-color: #aebfe0 !important; }
 
 .download-btn:hover {
     background: var(--primary-hover) !important;
@@ -756,7 +757,7 @@ watch(() => formattedHeaders.value.map(header => header.key), keys => {
     flex-wrap: wrap;
 }
 
-.source-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; background: var(--primary-light); color: var(--primary-dark); font-size: 12px; font-weight: 500; }
+.source-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; background: #edf3ff; color: #385ea9; font-size: 12px; font-weight: 500; }
 .source-sql { color: #7754aa; background: #f2ecfa; }
 .source-hybrid { color: #276e78; background: #eaf5f5; }
 .source-saved_session { color: #566174; background: #eef1f5; }
@@ -773,24 +774,24 @@ watch(() => formattedHeaders.value.map(header => header.key), keys => {
 }
 
 .streaming-indicator {
-    color: var(--primary);
+    color: #4C64E2;
 }
 
 .streaming-text {
     font-size: 0.813rem;
     font-weight: 500;
-    color: var(--primary);
+    color: #4C64E2;
 }
 
 .streaming-footer-indicator {
     border-top: 1px solid #eef1ff;
-    background: var(--surface-muted);
+    background: #f9faff;
 }
 
 .streaming-footer-text {
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--primary);
+    color: #4C64E2;
 }
 
 /* Content Type Styles */
@@ -799,7 +800,7 @@ watch(() => formattedHeaders.value.map(header => header.key), keys => {
     overflow-x: auto;
     margin: 0 auto;
     max-width: 800px;
-    background: var(--surface-muted);
+    background: #f9faff;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(76, 100, 226, 0.05);
     animation: fade-in-up 0.5s ease-out;
@@ -934,7 +935,7 @@ watch(() => formattedHeaders.value.map(header => header.key), keys => {
 .column-menu p { font-size: 12px; color: #64748b; margin: 12px 0; }
 .column-options { display: grid; max-height: 280px; overflow-y: auto; gap: 4px; }
 .column-options label { display: flex; align-items: center; gap: 10px; padding: 7px 4px; font-size: 13px; cursor: pointer; }
-.column-options input { width: 16px; height: 16px; accent-color: var(--primary); }
+.column-options input { width: 16px; height: 16px; accent-color: #3e63dd; }
 .results-table { font-family: var(--font-family-body, inherit); }
 :deep(.results-table) { background: #fff; border: 1px solid var(--workspace-outline, #d6dce5); border-radius: 12px; overflow: hidden; box-shadow: none; font-size: 13px; }
 :deep(.results-table .v-table__wrapper) {

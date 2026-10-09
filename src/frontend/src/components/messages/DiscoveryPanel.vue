@@ -143,7 +143,7 @@ const toolSource = (tool) => {
 .activity { width: 100%; margin: 0; border: 1px solid var(--workspace-outline, #d6dce5); border-radius: 10px; background: #fff; color: var(--text-secondary, #61646c); font-size: 14px; line-height: 1.5; overflow: hidden; }
 .activity-toggle { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; width: 100%; padding: 11px 14px; background: #fff; border: 0; border-radius: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .activity-toggle:hover { background: rgba(127, 127, 127, 0.06); }
-.activity-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.activity-toggle:focus-visible { outline: 2px solid var(--primary, #6366f1); outline-offset: -2px; }
 .activity-label { font-weight: 600; color: var(--text-primary, #27272a); }
 .activity-count { color: #626b79; }
 .activity-state { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
@@ -180,7 +180,7 @@ const toolSource = (tool) => {
 .empty .request-indicator { background: #b7791f; }
 .failed .request-indicator { background: #d13f3f; }
 .failed .request-status, .activity-error { color: #b42318; }
-.running .request-indicator, .busy-dot { background: var(--primary); animation: pulse 1.4s ease-in-out infinite; }
+.running .request-indicator, .busy-dot { background: var(--primary, #6366f1); animation: pulse 1.4s ease-in-out infinite; }
 .activity-placeholder, .activity-error { margin: 6px 0; overflow-wrap: anywhere; }
 .request-placeholder { display: block; margin: 4px 0 0 22px; font-size: 12px; color: #626b79; }
 @keyframes pulse { 50% { opacity: 0.35; } }

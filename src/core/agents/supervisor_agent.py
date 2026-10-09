@@ -774,24 +774,8 @@ def _normalize_after_delegation_decision(
             evidence_result_set_refs=decision.evidence_result_set_refs,
         )
 
-    if latest_delegation_result.success and not latest_delegation_result.needs_specialists:
-        latest_target = _specialist_to_target(latest_delegation_result.source_specialist)
-
-        if decision.mode == "delegate" and decision.target in _DELEGATE_TARGETS and decision.target != "PROCESSOR":
-            # Allow valid cross-specialist follow-up work like SPECIAL -> SQL or SQL -> API.
-            # Only collapse the decision when the supervisor is replaying the same specialist
-            # without explicit unresolved specialist needs from the latest result.
-            if (decision.target == latest_target and latest_delegation_result.status != "empty"
-                    and latest_delegation_result.result_mode != "empty"):
-                return SupervisorDecision(
-                    mode="complete",
-                    target="SYNTHESIS",
-                    result_mode="synthesis_ready",
-                    reasoning="Latest specialist produced sufficient evidence with no further specialist needs.",
-                    evidence_artifact_keys=latest_delegation_result.artifact_keys,
-                    evidence_result_set_refs=latest_delegation_result.result_set_refs,
-                )
-
+    # A successful step can still need the same specialist for a dependent lookup.
+    # The orchestrator bounds repeated requirements, discovery phases and tool calls.
     return decision
 
 

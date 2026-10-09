@@ -293,7 +293,7 @@ defineExpose({ refresh: refreshSidebar })
   bottom: 0;
   width: var(--sidebar-width, 280px);
   background: var(--surface-sidebar, #f8fafc);
-  border-right: 1px solid var(--workspace-outline);
+  border-right: 1px solid #d8e0ec;
   display: flex;
   flex-direction: column;
   transition: width 0.25s ease;
@@ -328,7 +328,7 @@ defineExpose({ refresh: refreshSidebar })
 }
 
 .title-icon {
-  color: var(--primary);
+  color: #5470aa;
 }
 
 .count-pill {
@@ -352,7 +352,7 @@ defineExpose({ refresh: refreshSidebar })
   width: 26px;
   height: 26px;
   border-radius: 6px;
-  border: 1px solid var(--border-color);
+  border: 1px solid #e2e7f0;
   background: #fff;
   cursor: pointer;
   color: var(--text-muted);
@@ -455,17 +455,18 @@ defineExpose({ refresh: refreshSidebar })
   background: rgba(15, 23, 42, 0.14);
 }
 
-/* Compact rows keep titles and timestamps readable without nested cards. */
-.history-list { display: flex; flex-direction: column; gap: 4px; }
+/* Inset dividers separate conversations while keeping the selected row distinct. */
+.history-list { display: flex; flex-direction: column; gap: 12px; }
 .history-row { position: relative; border: 1px solid transparent; border-radius: 9px; transition: background .15s, border-color .15s; }
-.history-row:hover { background: var(--surface-hover); border-color: var(--border-color); }
+.history-row + .history-row::after { content: ''; position: absolute; top: -7px; left: 10px; right: 10px; border-top: 1px solid #cbd5e1; pointer-events: none; }
+.history-row:hover { background: #f1f5fb; border-color: #e0e7f2; }
 .history-row.is-selected { background: var(--primary-light); border-color: var(--primary-border); }
 .history-row.is-selected::before { content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 2px; border-radius: 2px; background: var(--primary); }
 .history-row.is-selected .row-title { color: var(--primary-dark); font-weight: 550; }
 .conversation-icon { color: #9aa8bc; margin-top: 3px; }
 .history-row.is-selected .conversation-icon { color: var(--primary); }
 .history-row.is-archived { opacity: .75; }
-.session-select { display: grid; grid-template-columns: 14px minmax(0, 1fr); column-gap: 8px; width: 100%; padding: 10px; border: 0; border-radius: inherit; background: transparent; text-align: left; cursor: pointer; }
+.session-select { display: grid; grid-template-columns: 14px minmax(0, 1fr); column-gap: 8px; width: 100%; padding: 12px 10px; border: 0; border-radius: inherit; background: transparent; text-align: left; cursor: pointer; }
 .row-status-group { position: absolute; bottom: 6px; right: 5px; }
 .history-sidebar button:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
 .pin-toggle { display: grid; place-items: center; width: 24px; height: 24px; border: 0; border-radius: 6px; background: transparent; color: #7b8190; cursor: pointer; transition: background .15s, opacity .15s; }

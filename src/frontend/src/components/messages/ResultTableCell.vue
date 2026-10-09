@@ -83,5 +83,5 @@ onBeforeUnmount(() => observer?.disconnect())
     cursor: pointer;
 }
 .cell-toggle:hover { text-decoration: underline; text-underline-offset: 3px; }
-.cell-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 2px; }
+.cell-toggle:focus-visible { outline: 2px solid var(--primary, #3e63dd); outline-offset: 3px; border-radius: 2px; }
 </style>

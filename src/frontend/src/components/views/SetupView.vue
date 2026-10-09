@@ -309,21 +309,21 @@ watch([password, confirmPassword], ([newPassword, newConfirmPassword]) => {
   padding: 32px 24px;
 }
 
-.auth-shell::before {
+.auth-card::before {
   content: '';
   position: absolute;
   z-index: -1;
   pointer-events: none;
   width: min(850px, 96vw);
   height: 640px;
-  top: 42%;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  mask-image: radial-gradient(ellipse closest-side, #000 35%, transparent 100%);
+  mask-image: radial-gradient(ellipse closest-side, #000 45%, transparent 100%);
   background:
-    radial-gradient(ellipse at 28% 36%, rgba(15, 118, 110, 0.16), transparent 55%),
-    radial-gradient(ellipse at 72% 28%, rgba(100, 175, 145, 0.15), transparent 50%),
-    radial-gradient(ellipse at 65% 76%, rgba(45, 160, 158, 0.12), transparent 48%);
+    radial-gradient(ellipse at 68% 42%, rgba(176, 147, 232, 0.36), transparent 57%),
+    radial-gradient(ellipse at 28% 48%, rgba(116, 175, 236, 0.27), transparent 58%),
+    radial-gradient(ellipse at 62% 76%, rgba(142, 163, 221, 0.16), transparent 52%);
 }
 .password-toggle:focus-visible, .field-help-button:focus-visible, .auth-button:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
 
@@ -355,6 +355,7 @@ watch([password, confirmPassword], ([newPassword, newConfirmPassword]) => {
 }
 
 .auth-card {
+  position: relative;
   width: 100%;
   background: transparent;
   border: 0;
@@ -377,7 +378,7 @@ watch([password, confirmPassword], ([newPassword, newConfirmPassword]) => {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  color: var(--text-secondary);
+  color: var(--primary-dark);
 }
 
 .form-field:focus-within label {
@@ -414,7 +415,7 @@ watch([password, confirmPassword], ([newPassword, newConfirmPassword]) => {
   align-items: center;
   min-height: 46px;
   background: #ffffff;
-  border: 1px solid var(--primary-border);
+  border: 1px solid rgba(var(--primary-rgb), 0.32);
   box-shadow: 0 3px 10px rgba(var(--primary-rgb), 0.035);
   border-radius: 10px;
   overflow: hidden;
@@ -533,8 +534,8 @@ watch([password, confirmPassword], ([newPassword, newConfirmPassword]) => {
 }
 
 .auth-button:disabled {
-  background: var(--surface-hover);
-  color: var(--text-muted);
+  background: #dbeafb;
+  color: #5d7d99;
   cursor: not-allowed;
   box-shadow: none;
 }

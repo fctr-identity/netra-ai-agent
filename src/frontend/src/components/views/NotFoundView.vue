@@ -2,7 +2,7 @@
   <AppLayout contentClass="auth-content">
     <div class="auth-box">
       <div class="setup-icon">
-        <v-icon size="32" color="var(--primary)">mdi-alert-circle-outline</v-icon>
+        <v-icon size="32" color="#4C64E2">mdi-alert-circle-outline</v-icon>
       </div>
       <h1 class="auth-title">Page Not Found</h1>
       <div class="auth-subtitle">The page you're looking for doesn't exist or has been moved</div>

@@ -241,6 +241,7 @@ async def execute_result_analysis(
     preferred_result_set_refs: Optional[List[str]] = None,
     workflow_state: Optional[Dict[str, Any]] = None,
     user_timezone: Optional[str] = None,
+    cancellation_check=None,
 ) -> tuple[DelegationResult, Any]:
     """Run the LLM-guided result-analysis specialist and return a specialist-style delegation result."""
     candidate_result_sets = _load_candidate_result_sets(
@@ -372,13 +373,15 @@ async def execute_result_analysis(
         )
 
     try:
-        execution_output = _execute_analysis_code(
-            user_query=user_query,
-            python_code=plan.python_code or "",
-            user_timezone=user_timezone,
-            selected_candidates=selected_candidates,
-            selected_result_set_ids=selected_result_set_ids,
-        )
+        from src.core.process_runner import run_worker
+        payload = await run_worker('analysis', {
+            'user_query': user_query,
+            'python_code': plan.python_code or '',
+            'user_timezone': user_timezone,
+            'selected_candidates': selected_candidates,
+            'selected_result_set_ids': selected_result_set_ids,
+        }, cancellation_check=cancellation_check)
+        execution_output = ResultAnalysisExecutionOutput.model_validate(payload)
     except Exception as exc:
         logger.error(f"Result analysis execution failed: {exc}", exc_info=True)
         return (

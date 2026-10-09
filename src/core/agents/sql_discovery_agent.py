@@ -518,37 +518,13 @@ def create_sql_toolset(deps: SQLDiscoveryDeps) -> FunctionToolset:
         
         # Execute query
         try:
-            import sqlite3
-            from pathlib import Path
-            
-            db_path = find_sqlite_db_path()
+            from src.core.process_runner import run_worker
+            sample = await run_worker('sql', {'query': sql_query}, timeout=15,
+                                      cancellation_check=deps.cancellation_check)
+            results = sample['rows']
+            columns = sample['columns']
+            execution_time_ms = sample['execution_time_ms']
 
-            if not db_path:
-                return ToolReturn(
-                    return_value="❌ Database not found",
-                    content="Database file not accessible",
-                    metadata={'success': False, 'db_error': True}
-                )
-            
-            from src.core.entra.client.read_database import open_database
-            conn = open_database()
-            cursor = conn.cursor()
-            
-            start_time = time.time()
-            cursor.execute(sql_query)
-            rows = cursor.fetchall()
-            execution_time_ms = int((time.time() - start_time) * 1000)
-            
-            # Get column names
-            columns = [desc[0] for desc in cursor.description] if cursor.description else []
-            
-            # Convert to dicts
-            results = []
-            for row in rows:
-                results.append(dict(zip(columns, row)))
-            
-            conn.close()
-            
             # Truncate long text fields to reduce token usage
             truncated_results = truncate_sql_results(results, max_text_length=100)
             

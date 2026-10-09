@@ -47,12 +47,12 @@ const bodyId = `turn-body-${useId()}`
 
 <style scoped>
 .response-card { min-width: 0; border: 1px solid #b8c2cf; border-radius: 12px; background: #fff; overflow: hidden; }
-.turn-header { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 22px; border: 0; background: var(--primary-light); color: var(--text-primary); font: inherit; text-align: left; cursor: pointer; transition: background .15s ease; }
+.turn-header { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 22px; border: 0; background: #eef3fc; color: #243957; font: inherit; text-align: left; cursor: pointer; transition: background .15s ease; }
 .is-follow-up .turn-header { padding-block: 8px; }
 .turn-header:hover { background: #e6edfa; }
-.is-collapsed .turn-header { background: var(--surface-muted); }
-.is-collapsed .turn-header:hover { background: var(--primary-light); }
-.turn-header:focus-visible { outline: 2px solid var(--primary); outline-offset: -3px; }
+.is-collapsed .turn-header { background: #f7f9fd; }
+.is-collapsed .turn-header:hover { background: #eef3fc; }
+.turn-header:focus-visible { outline: 2px solid var(--primary, #3e63dd); outline-offset: -3px; }
 .turn-chevron { flex-shrink: 0; color: #4c67a1; transition: transform .15s ease; }
 .turn-chevron.expanded { transform: rotate(90deg); }
 .turn-heading-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }

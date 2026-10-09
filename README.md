@@ -12,24 +12,51 @@ licensing, retention, and report freshness still determine the available evidenc
 
 ## Local setup
 
-Use Python 3.12+ and Node.js 24. From the repository root:
+Use [uv](https://docs.astral.sh/uv/getting-started/installation/) and Node.js 24.
+Netra uses uv with its existing requirements files. From the repository root,
+create a Python 3.12 environment once; skip this command if `.venv` already exists:
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-Copy-Item .env.example .env
-npm --prefix src/frontend ci
-npm --prefix src/frontend run build
+uv venv --python 3.12
 ```
 
-On macOS/Linux, activate with `source .venv/bin/activate` and copy the template
-with `cp .env.example .env`. Keep `.env` private.
+Install the backend dependencies and build the UI (Windows PowerShell):
 
-Create a single-tenant Entra app registration. Add a client secret and configure
-`ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, and `ENTRA_CLIENT_SECRET`. Use the secret
-**value**, not its identifier. Graph authentication uses Microsoft's async Azure
-Identity library and Graph Python SDK with application permissions and admin consent.
+```powershell
+uv pip install -r requirements.txt
+npm.cmd --prefix src/frontend ci
+npm.cmd --prefix src/frontend run build
+```
+
+No virtual environment activation is needed. On macOS/Linux, use `npm` instead
+of `npm.cmd`; the uv commands are the same. If you do not already have a private
+`.env`, copy `.env.example` to `.env` (`Copy-Item .env.example .env` in PowerShell,
+or `cp .env.example .env` on macOS/Linux). Keep existing configuration when
+repeating setup. Configure Entra and a model provider below before starting Netra.
+
+### Entra app registration
+
+Netra uses application credentials for Microsoft Graph and keeps its own local
+admin login. **No callback/redirect URI or Entra single sign-on configuration is
+needed for this version.** Create the identity through **App registrations**;
+Entra creates its matching Enterprise Application (service principal) automatically.
+See Microsoft's [app registration guide](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app)
+and [client credentials flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-client-creds-grant-flow).
+
+1. In the [Microsoft Entra admin center](https://entra.microsoft.com), choose the
+   intended tenant, then **Entra ID → App registrations → New registration**.
+   Name it **Netra**, select **Single tenant only** (accounts in this organizational
+   directory only), and leave the optional redirect URI blank. Select **Register**.
+2. On **Overview**, copy the **Directory (tenant) ID** and **Application (client) ID**.
+   Use the application/client ID, not either object's Object ID.
+3. Open **Certificates & secrets → Client secrets → New client secret**. Enter a
+   description and expiry, then copy the secret **Value** immediately. Entra only
+   shows it once; the Secret ID is not a credential. See
+   [Microsoft's credential instructions](https://learn.microsoft.com/en-us/entra/identity-platform/how-to-add-credentials).
+4. Open **API permissions → Add a permission → Microsoft Graph → Application
+   permissions**. Add the four permissions used by the default sync below. Add the
+   optional permissions only for features you want to use. An automatically added
+   delegated `User.Read` permission can be removed; Netra uses application permissions.
 
 | Read scope | Microsoft Graph application permissions |
 | --- | --- |
@@ -44,16 +71,46 @@ Grant only the scopes you enable. Hidden group membership additionally needs
 `Member.Read.Hidden`. Permission failures are reported as unavailable evidence,
 not as empty data. Netra does not need Graph write permissions.
 
+5. In **API permissions**, select **Grant admin consent** for your tenant and
+   confirm that each requested application permission shows **Granted for** that
+   tenant. Microsoft Graph application permission consent requires an authorized
+   administrator, such as a **Privileged Role Administrator**. Being an app owner
+   alone is insufficient. See [Microsoft's admin consent guide](https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/grant-admin-consent).
+6. Put the three values in the private `.env` in Netra's repository root:
+
+   ```dotenv
+   ENTRA_TENANT_ID=<directory-tenant-id>
+   ENTRA_CLIENT_ID=<application-client-id>
+   ENTRA_CLIENT_SECRET=<client-secret-value>
+   ```
+
+The SDK requests `https://graph.microsoft.com/.default` automatically. There is no
+local redirect endpoint to register, API to expose, or user-assignment setup needed
+for these app-only Graph reads. Optional directory roles, Conditional Access and
+devices need their listed permission for live reads; set their corresponding
+`SYNC_*` flags to `true` if they should also be copied into the database. The flags
+are listed under **Sync and query** below. Restart Netra after configuration changes.
+
 Configure a model provider separately. The template defaults to
 `AI_PROVIDER=openai_compatible`; set its base URL, token, reasoning model, and
-coding model. Inherited provider adapters also support `openai`, `azure_openai`,
+coding model in the same private `.env`:
+
+```dotenv
+AI_PROVIDER=openai_compatible
+OPENAI_COMPATIBLE_BASE_URL=<provider-api-base-url>
+OPENAI_COMPATIBLE_TOKEN=<provider-api-key>
+OPENAI_COMPATIBLE_REASONING_MODEL=<model-id>
+OPENAI_COMPATIBLE_CODING_MODEL=<model-id>
+```
+
+The two model IDs can be the same. Inherited provider adapters also support `openai`, `azure_openai`,
 `google`, `vertex_ai`, `anthropic`, and `bedrock`. The template includes the
 OpenAI and Azure alternatives. Choose models supporting structured tool calls.
 
 Start the local server:
 
 ```powershell
-python main.py
+uv run main.py
 ```
 
 Open **http://127.0.0.1:8001**. The first start prints a one-time setup token in
@@ -67,12 +124,13 @@ loopback. For a public HTTPS deployment, configure the proxy and set
 Click **Data sync → Sync now**, or run the same snapshot engine once:
 
 ```powershell
-python scripts/sync_entra_to_db.py
+uv run scripts/sync_entra_to_db.py
 ```
 
 The CLI exits 0 for a complete sync and nonzero for partial/failing runs. There
-is no built-in scheduler. Run this command with the virtual environment's Python
-from cron or Windows Task Scheduler when needed. An OS lock coordinates CLI and
+is no built-in scheduler. Run this command from the repository root, or use the
+virtual environment's Python with an absolute script path from cron or Windows
+Task Scheduler when needed. An OS lock coordinates CLI and
 UI syncs. A stale process history does not prevent a fresh UI sync.
 
 Default snapshots include users, groups, direct memberships, service principals,
@@ -100,14 +158,27 @@ Example questions:
 - Which enterprise apps are assigned to a named user, directly or through groups?
 - Which users appear in the MFA registration report as not registered?
 
-The CLI query interface is `python scripts/netra-cli.py --help`. Exported retrieval
-scripts depend on this Netra checkout and its configured virtual environment.
+### Ask from the terminal
+
+The CLI uses the same agent workflow and Entra/model configuration as the UI:
+
+```powershell
+uv run scripts/netra-cli.py "Use live Graph to list five users and their account-enabled status"
+uv run scripts/netra-cli.py --interactive
+uv run scripts/netra-cli.py --help
+```
+
+Tabular answers are saved as CSVs; the CLI prints the output path and a short
+preview. Use `--session-id <name>` to group related questions, or `--scriptonly`
+to generate the final retrieval script without executing it. Discovery may still
+make read-only Graph calls in script-only mode. Exported retrieval scripts depend
+on this Netra checkout and its configured virtual environment.
 
 ## Teams
 
-Teams is optional and uses the same query runtime. Install
-`requirements-teams.txt`, configure the bot identity and allowed groups, and
-follow [the Teams guide](src/integrations/teams/README.md). Bot Service needs a
+Teams is optional and uses the same query runtime. Install its dependencies with
+`uv pip install -r requirements.txt -r requirements-teams.txt`, configure the bot
+identity and allowed groups, and follow [the Teams guide](src/integrations/teams/README.md). Bot Service needs a
 reachable HTTPS messaging endpoint even when the Netra process runs locally.
 The bot tenant must match `ENTRA_TENANT_ID`; authorization checks use Netra's
 read-only Graph identity. Slack and specialized access analyses are outside this POC.
@@ -138,6 +209,16 @@ string-format traversal and helper rebinding, and run before script staging or
 saved-result analysis. Prompt instructions are not a security boundary. Accepted
 Python still runs with the application's operating-system privileges.
 
+Generated API discovery, SQL discovery, and saved-result analysis run in local
+child processes. The shared supervisor also covers final UI, CLI, Teams, and
+saved-procedure retrieval scripts. It enforces 120-second final execution,
+60-second API/analysis execution, and 15-second SQL discovery deadlines, including
+worker startup. Captured output is capped at 8 MiB stdout and 1 MiB stderr;
+oversized output fails rather than returning truncated success. Cancellation is
+checked independently of progress messages, and children are killed and reaped
+on failure/cancellation. These are time/output bounds, not memory/CPU quotas or
+filesystem/credential isolation.
+
 Assignments are not effective access. MFA registration is not successful MFA use.
 Direct and transitive memberships differ, and nested groups do not confer
 group-based app assignments. The v1.0 group-members source has a documented
@@ -150,8 +231,8 @@ See [catalog maintenance](docs/GRAPH_CATALOG.md) for pinned official sources and
 regeneration. Source URLs belong in maintainer documentation, outside agent context.
 
 ```powershell
-python -m unittest discover -s tests -v
-npm --prefix src/frontend run build
+uv run python -m unittest discover -s tests -v
+npm.cmd --prefix src/frontend run build
 ```
 
 The focused checks use synthetic data, a mocked SDK transport, and an isolated

@@ -3,17 +3,16 @@
         <!-- Header -->
         <header v-if="showHeader" class="floating-header">
             <div class="header-content">
-                <!-- Brand section: Fctr lockup + Netra AI -->
+                <!-- Brand section: Fctr lockup + Netra AI Agent -->
                 <div class="brand">
                     <img src="@/assets/fctr-lockup-primary.svg" alt="Fctr" />
                     
                     <div class="brand-divider"></div>
                     <div class="title-with-badge">
                         <div class="netra-title-container">
-                            <img class="netra-mark" src="@/assets/netra-mark.svg" alt="" />
-                            <span class="netra-name">Netra AI</span>
+                            <span class="netra-name">Netra AI Agent</span>
                         </div>
-                        <span class="directory-badge">Entra ID</span>
+                        <div v-if="showLogout" class="beta-badge">BETA</div>
                     </div>
                 </div>
 
@@ -21,6 +20,7 @@
                     <!-- Add SyncStatusButton here -->
                     <div class="header-spacer"></div>
                     <SyncStatusButton v-if="showLogout" />
+                    <span v-if="logoutError" role="alert" class="text-error text-caption">{{ logoutError }}</span>
                     <button v-if="showLogout" class="logout-btn" aria-label="Logout"
                         @click="handleLogout">
                         <v-icon size="16">mdi-logout</v-icon>
@@ -87,6 +87,7 @@ const auth = useAuth()
 const router = useRouter()
 const sidebarRef = ref(null)
 const sidebarCollapsed = ref(false)
+const logoutError = ref('')
 
 // Provide sidebar refresh to children
 const refreshHistory = () => sidebarRef.value?.refresh()
@@ -103,8 +104,12 @@ const appVersion = computed(() => {
 })
 
 const handleLogout = async () => {
-    await auth.logout()
-    router.push('/login')
+    logoutError.value = ''
+    if (await auth.logout()) {
+        router.push('/login')
+    } else {
+        logoutError.value = auth.error.value
+    }
 }
 
 // Track sidebar collapse state
@@ -149,7 +154,6 @@ const handleNewSession = () => {
     min-height: var(--header-height);
     background: var(--bg-page);
     border-bottom: 1px solid var(--workspace-outline);
-    box-shadow: inset 0 3px 0 var(--primary);
 }
 
 .header-content {
@@ -188,12 +192,12 @@ const handleNewSession = () => {
 
 .netra-name {
     font-family: var(--font-family-display);
-    font-weight: 700;
-    font-size: 15px;
+    font-weight: 600;
+    font-size: 14px;
     line-height: 1;
     letter-spacing: -0.02em;
     white-space: nowrap;
-    color: var(--primary-dark);
+    color: var(--text-primary);
     display: flex;
     align-items: center;
 }
@@ -211,19 +215,7 @@ const handleNewSession = () => {
     align-self: center;
 }
 
-.netra-title-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.brand img.netra-mark {
-    width: 26px;
-    height: 26px;
-    transform: none;
-}
-
-.directory-badge {
+.beta-badge {
     background: var(--primary-light);
     border: 1px solid var(--primary-border);
     color: var(--primary-dark);
@@ -233,8 +225,6 @@ const handleNewSession = () => {
     border-radius: 6px;
     letter-spacing: 0.06em;
     line-height: 1;
-    text-transform: uppercase;
-    white-space: nowrap;
 }
 
 .logout-btn {
@@ -242,8 +232,8 @@ const handleNewSession = () => {
     align-items: center;
     gap: 6px;
     background: #ffffff;
-    border: 1px solid var(--workspace-outline);
-    color: var(--text-secondary);
+    border: 1px solid #cbd7ea;
+    color: #334b72;
     cursor: pointer;
     height: 34px;
     padding: 0 11px;
@@ -256,9 +246,9 @@ const handleNewSession = () => {
 }
 
 .logout-btn:hover {
-    background: var(--primary-light);
-    border-color: var(--primary-border);
-    color: var(--primary-dark);
+    background: #eef3fc;
+    border-color: #aebfe0;
+    color: #3556aa;
     box-shadow: none;
 }
 
@@ -273,7 +263,7 @@ const handleNewSession = () => {
     flex-direction: column;
     margin: 0;
     border-radius: 0;
-    background: var(--workspace-canvas);
+    background: var(--surface);
 }
 
 /* Reserve the sidebar once; all chat content shares the remaining canvas. */
@@ -413,7 +403,7 @@ const handleNewSession = () => {
 }
 
 .disclaimer {
-    color: var(--text-muted);
+    color: #7d8bb2;
     margin-left: 4px;
 }
 
@@ -471,13 +461,6 @@ const handleNewSession = () => {
 }
 
 @media (max-width: 480px) {
-    .brand > img,
-    .brand-divider,
-    .directory-badge,
-    .logout-btn span {
-        display: none;
-    }
-
     .app-card {
         padding: 30px 20px;
     }
