@@ -7,15 +7,26 @@ export function applyRequestProgress(requests, event, now = Date.now()) {
     let request = requests.find(item => item.id === event.request_id)
     if (request && !activeRequestStates.has(request.status)) return
     if (!request) {
-        request = { id: event.request_id, operation: event.operation, label: event.label,
+        request = { id: event.request_id, kind: event.kind, operation: event.operation, label: event.label,
             startedAt: now - (event.elapsed_ms || 0) }
         requests.push(request)
     }
     request.status = event.status
+    if (event.reason) request.reason = event.reason
     if (Number.isFinite(event.elapsed_ms)) request.elapsedMs = event.elapsed_ms
     request.attempt = event.attempt || request.attempt || 0
     request.retryUntil = event.status === 'retry_wait' && Number.isFinite(event.retry_after_seconds)
         ? now + event.retry_after_seconds * 1000 : null
+}
+
+export function applyModelProgress(steps, event, now = Date.now()) {
+    if (event?.kind !== 'model_request') return false
+    const step = steps.find(item => item.modelRequests?.some(request => request.id === event.request_id)) || steps.at(-1)
+    if (step) {
+        step.modelRequests ||= []
+        applyRequestProgress(step.modelRequests, event, now)
+    }
+    return true
 }
 
 export function applyApiTestProgress(steps, event, now = Date.now()) {
@@ -47,6 +58,7 @@ export function interruptRequests(requests, status = 'unknown', now = Date.now()
 
 export function interruptApiTests(steps, status = 'unknown') {
     for (const step of steps) {
+        interruptRequests(step.modelRequests || [], status)
         for (const tool of step.tools || []) interruptRequests(tool.requests || [], status)
     }
 }
@@ -57,6 +69,16 @@ export function requestElapsed(request, now) {
 }
 
 export function requestStatus(request, now) {
+    const source = request.kind === 'model_request' ? 'AI provider' : 'Microsoft Graph'
+    if (request.status === 'retry_wait' && request.reason === 'rate_limit') {
+        return request.retryUntil > now
+            ? `${source} rate limited · requested wait: ${Math.ceil((request.retryUntil - now) / 1000)}s remaining`
+            : `${source} rate limited · waiting for retry`
+    }
+    if (request.kind === 'model_request') {
+        if (request.status === 'retrying') return 'Retrying AI provider request'
+        if (request.status === 'success') return 'AI provider responded'
+    }
     if (request.status === 'retry_wait' && request.retryUntil > now) {
         return `Graph requested a wait · ${Math.ceil((request.retryUntil - now) / 1000)}s remaining`
     }

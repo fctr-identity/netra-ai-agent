@@ -244,6 +244,29 @@ separate UI views. Per-attempt HTTP timing/status diagnostics stay in server log
 they omit request URLs, credentials, and response bodies. Timers update locally
 without per-second server events.
 
+Graph 429s and AI provider throttling appear as rate-limit status in query activity
+and the CLI. Model status covers planning, discovery, review, and synthesis through
+the shared model boundary. A countdown displays the provider's `Retry-After` hint
+(seconds or HTTP date; millisecond hints are also accepted). Without a valid hint,
+the UI shows rate limiting without inventing a countdown. This is a requested
+retry delay, not a guaranteed quota reset. Existing SDK retries and query deadlines
+remain unchanged; completion, failure, or cancellation clears the waiting state.
+Only throttled model calls add activity entries, keeping normal progress compact.
+
+API discovery retains each returned test payload and its exact tested code in a
+temporary folder under the current turn's artifacts. The model receives a valid,
+bounded JSON preview and a test ID; `save_artifact` promotes that ID's original
+payload and code into the existing durable artifact/result-set storage. The
+model does not copy response JSON back into the save call. `inspect_test_result`
+can preview a nested value locally without repeating a Graph request.
+
+Temporary test folders are removed when discovery finishes, fails, or is
+cancelled. After an abrupt process exit, the next web, CLI, or integration query
+sweeps abandoned test folders with no changes in the last 24 hours. This is
+opportunistic cleanup, not a timer. Selected artifacts remain with the conversation
+and follow its existing retention; CLI evaluation output is still retained in
+its chosen runtime directory. No new storage service is required.
+
 Assignments are not effective access. MFA registration is not successful MFA use.
 Direct and transitive memberships differ, and nested groups do not confer
 group-based app assignments. The v1.0 group-members source has a documented

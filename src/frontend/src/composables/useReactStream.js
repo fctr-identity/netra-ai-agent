@@ -7,7 +7,7 @@
 
 import { ref, watch } from 'vue'
 import { useAuth } from './useAuth'
-import { applyApiTestProgress, interruptApiTests, applyRequestProgress, interruptRequests } from './apiTestProgress'
+import { applyApiTestProgress, applyModelProgress, interruptApiTests, applyRequestProgress, interruptRequests } from './apiTestProgress'
 import { isClarification, clarificationResult } from './turnFeedback'
 import { getBrowserTimezone } from './userTimezone'
 
@@ -419,6 +419,7 @@ export function useReactStream() {
      * Handle STEP-PROGRESS event (subprocess execution)
      */
     const handleStepProgress = (data) => {
+        if (applyModelProgress(discoverySteps.value, data.details)) return
         if (applyApiTestProgress(discoverySteps.value, data.details)) return
         if (data.details?.kind === 'graph_request') {
             applyRequestProgress(subprocessProgress.value, data.details)

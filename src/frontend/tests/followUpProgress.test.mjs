@@ -40,6 +40,17 @@ test('follow-up phase events reach Activity without tools or internal reasoning'
             assert.doesNotMatch(html, /Preparing your request|No tool calls recorded|PRIVATE_|tool call/)
         }
         // Tool calls stay beneath their phase instead of collecting at the bottom.
+        const modelEvent = status => ({ type: 'STEP-PROGRESS', details: {
+            kind: 'model_request', request_id: 'fixture-model', reason: 'rate_limit',
+            status, retry_after_seconds: 30, elapsed_ms: 2000,
+        } })
+        stream.onmessage({ data: JSON.stringify(modelEvent('retry_wait')) })
+        assert.match(await render(), /AI provider rate limited.*requested wait/)
+        stream.onmessage({ data: JSON.stringify(modelEvent('retrying')) })
+        assert.match(await render(), /Retrying AI provider request/)
+        stream.onmessage({ data: JSON.stringify(modelEvent('success')) })
+        assert.doesNotMatch(await render(), /AI provider rate limited|Retrying AI provider request/)
+
         const grouped = await renderToString(createSSRApp({ render: () => h(Activity, {
             isComplete: true,
             steps: [

@@ -78,6 +78,9 @@ class PublicProgressChecks(unittest.IsolatedAsyncioTestCase):
         states = [json.loads(line[len('__PROGRESS__'):])['details']['status']
                   for line in captured.splitlines() if line.startswith('__PROGRESS__')]
         self.assertEqual(states, ['retry_wait', 'retrying'])
+        first = json.loads(next(line[len('__PROGRESS__'):] for line in captured.splitlines()
+                               if line.startswith('__PROGRESS__')))
+        self.assertEqual(public_progress(first['details'])['details']['reason'], 'rate_limit')
         timings = [json.loads(line[len('__NETRA_HTTP__'):]) for line in captured.splitlines()
                    if line.startswith('__NETRA_HTTP__')]
         self.assertEqual([item['http_status'] for item in timings], [429, 200])

@@ -39,8 +39,9 @@ result = await read_detail()
         tool = create_api_toolset(deps).tools['execute_test_query']
         with patch('src.core.process_runner.run_worker', new=AsyncMock(side_effect=offline_worker)):
             result = await tool.function(code)
+        self.addCleanup(deps.test_results.cleanup)
         self.assertTrue(result.metadata['success'])
-        self.assertEqual(json.loads(result.content)['status'], 'success')
+        self.assertEqual(json.loads(result.content)['data']['status'], 'success')
         self.assertEqual(calls, ['https://graph.microsoft.com/v1.0/auditLogs/signIns/fixture-id'])
 
     def test_routing_provenance_and_published_inventory_agree(self):
@@ -125,3 +126,28 @@ result = await read_detail()
         self.assertEqual(denied['http_status'], 403)
         self.assertFalse(denied['complete'])
         self.assertNotIn('data', denied)
+
+    async def test_total_limit_stops_pagination_but_page_size_alone_does_not(self):
+        from urllib.parse import parse_qs, urlsplit
+        for limit, expected_calls, expected_count, complete in ((5, 2, 5, False), (None, 3, 7, True)):
+            with self.subTest(max_results=limit):
+                calls = []
+                async def read(url, headers):
+                    calls.append(url)
+                    page = len(calls)
+                    if page == 1:
+                        self.assertEqual(parse_qs(urlsplit(url).query)['$top'], ['5'])
+                    ids = {1: ['a', 'b'], 2: ['c', 'd', 'e'], 3: ['f', 'g']}[page]
+                    payload = {'value': [{'id': item} for item in ids]}
+                    if page < 3:
+                        payload['@odata.nextLink'] = f'https://graph.microsoft.com/v1.0/users?$skiptoken=page{page + 1}'
+                    return payload
+                client = EntraAPIClient(page_reader=read)
+                try:
+                    result = await client.make_request('/users', params={'$top': 5}, max_results=limit)
+                    self.assertEqual(result['status'], 'success')
+                    self.assertEqual(len(calls), expected_calls)
+                    self.assertEqual(result['count'], expected_count)
+                    self.assertEqual(result['complete'], complete)
+                finally:
+                    await client.close_session()

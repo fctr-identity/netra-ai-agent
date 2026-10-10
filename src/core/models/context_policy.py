@@ -7,6 +7,7 @@ import dataclasses
 import re
 from contextlib import asynccontextmanager
 from pydantic_ai.models.wrapper import WrapperModel
+from src.core.models.rate_limit_progress import model_request_progress
 
 _URL = re.compile(r'(?i)\b(?:https?://|ftp://|file://|www\.)[^\s<>"\]\\]+')
 _DOMAIN = re.compile(r'(?i)(?<![\w@.])(?:[a-z0-9-]+\.)+(?:com|org|net|io|dev|gov|edu)(?:/[^\s<>"\]\\]*)?\b')
@@ -37,15 +38,18 @@ class ContextPolicyModel(WrapperModel):
     async def request(self, messages, model_settings, model_request_parameters):
         if getattr(model_request_parameters, 'builtin_tools', None):
             raise ValueError('Provider browsing and other built-in tools are disabled in Netra')
-        return await self.wrapped.request(project_context(messages), model_settings, project_context(model_request_parameters))
+        async with model_request_progress():
+            return await self.wrapped.request(project_context(messages), model_settings, project_context(model_request_parameters))
 
     @asynccontextmanager
     async def request_stream(self, messages, model_settings, model_request_parameters, run_context=None):
         if getattr(model_request_parameters, 'builtin_tools', None):
             raise ValueError('Provider built-in tools are disabled in Netra')
-        async with self.wrapped.request_stream(project_context(messages), model_settings,
-                project_context(model_request_parameters), run_context) as stream:
-            yield stream
+        async with model_request_progress():
+            async with self.wrapped.request_stream(project_context(messages), model_settings,
+                    project_context(model_request_parameters), run_context) as stream:
+                yield stream
 
     async def count_tokens(self, messages, model_settings, model_request_parameters):
-        return await self.wrapped.count_tokens(project_context(messages), model_settings, project_context(model_request_parameters))
+        async with model_request_progress():
+            return await self.wrapped.count_tokens(project_context(messages), model_settings, project_context(model_request_parameters))

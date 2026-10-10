@@ -52,6 +52,16 @@ test('activity hides internal reasoning and preserves actual endpoint statuses',
         assert.match(waiting, /Taking longer than usual/)
         assert.match(waiting, /Stop to cancel/)
 
+        const rateLimited = await renderToString(createSSRApp({ render: () => h(DiscoveryPanel, {
+            collapseRevision: 1,
+            steps: [{ phase: 'synthesis', tools: [], modelRequests: [{ id: 'model-1', kind: 'model_request',
+                status: 'retry_wait', reason: 'rate_limit', startedAt: Date.now() - 10000,
+                retryUntil: Date.now() + 30000 }] }],
+        }) }))
+        assert.match(rateLimited, /aria-expanded="false"/)
+        assert.match(rateLimited, /AI provider rate limited.*requested wait/)
+        assert.doesNotMatch(rateLimited, /1 tool call/)
+
         const descriptions = await renderToString(createSSRApp({ render: () => h(DiscoveryPanel, {
             steps: [{ tools: [
                 { name: 'get_sql_context', description: 'Inspect application fields' },

@@ -201,8 +201,17 @@ async def execute_generated_script(
         # Execute script
         logger.info(f"Executing script with {python_exe}")
         from src.core.process_runner import run_process, graph_execution_timeout
+        async def on_stderr(line):
+            if line.startswith('__NETRA_HTTP__'):
+                logger.info('Graph HTTP timing: %s', line[len('__NETRA_HTTP__'):])
+            elif line.startswith('__PROGRESS__'):
+                try:
+                    await event_callback('progress', json.loads(line[len('__PROGRESS__'):]))
+                except (ValueError, TypeError):
+                    pass
+
         proc = await run_process([python_exe, '-u', str(script_path.resolve())], cwd=project_root,
-                                 timeout=graph_execution_timeout())
+                                 timeout=graph_execution_timeout(), on_stderr=on_stderr)
         stdout, stderr = proc.stdout, proc.stderr
         stdout_str = stdout.decode('utf-8', errors='replace')
         stderr_str = stderr.decode('utf-8', errors='replace')
@@ -261,8 +270,22 @@ async def event_callback(event_type: str, event_data: Dict[str, Any]):
         text = clean_cli_text(event_data.get('text', ''))
         print(f"{Colors.OKBLUE}[{title}] {text}{Colors.ENDC}")
     elif event_type == "progress":
+        details = event_data.get('details')
+        if isinstance(details, dict) and details.get('status') in {'retry_wait', 'retrying'}:
+            from src.core.progress_events import public_progress
+            event = public_progress(details)
+            if event:
+                details = event['details']
+                source = 'AI provider' if details['kind'] == 'model_request' else 'Microsoft Graph'
+                message = f'{source}: retrying request' if details['status'] == 'retrying' else (
+                    f'{source}: rate limited' if details.get('reason') == 'rate_limit' else f'{source}: temporary error')
+                if 'retry_after_seconds' in details:
+                    message += f"; requested wait {details['retry_after_seconds']}s"
+                print(f"  {message}", flush=True)
+                return
         message = clean_cli_text(event_data.get('message', ''))
-        print(f"  {Colors.OKCYAN}-> {message}{Colors.ENDC}")
+        if message:
+            print(f"  {Colors.OKCYAN}-> {message}{Colors.ENDC}")
     elif event_type == "tool_call":
         tool_name = clean_cli_text(event_data.get('tool_name') or event_data.get('name') or 'unknown_tool')
         print(f"  {Colors.OKGREEN}Using tool: {tool_name}{Colors.ENDC}")

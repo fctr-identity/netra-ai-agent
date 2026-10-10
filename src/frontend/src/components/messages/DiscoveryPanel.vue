@@ -26,6 +26,12 @@
             <h3 class="phase-label">{{ section.label }}</h3>
             <span class="phase-status">{{ index === sections.length - 1 && error ? 'Stopped' : isWorking && index === sections.length - 1 ? 'In progress' : 'Completed' }}</span>
           </div>
+          <ul v-if="section.modelRequests.length" class="request-list" aria-label="AI provider retries">
+            <li v-for="request in section.modelRequests" :key="request.id" :class="['request', request.status]">
+              <span class="request-indicator" aria-hidden="true"></span>
+              <span class="request-status">{{ requestStatus(request, now) }} · {{ requestElapsed(request, now) }}s</span>
+            </li>
+          </ul>
           <ol v-if="section.tools.length" class="tool-list" :class="{ 'phase-tools': section.label }">
         <li v-for="entry in section.tools" :key="entry.key" class="tool-entry">
           <div class="tool-heading">
@@ -105,23 +111,26 @@ const sections = computed(() => props.steps.reduce((entries, step, stepIndex) =>
     tool, key: tool.testId || `${step.id || stepIndex}-${toolIndex}`,
   }))
   // Old steps without phase metadata retain their tools, without guessing a phase.
-  if (!phase && !stepTools.length) return entries
+  if (!phase && !stepTools.length && !step.modelRequests?.length) return entries
   let section = entries.at(-1)
   if (!section || section.phase !== phase) {
     const source = section?.phase === 'sql' ? 'Database' : section?.phase === 'api' ? 'API' : null
     const label = phase === 'review' && source ? `${phaseLabels.review} · ${source}` : phaseLabels[phase]
-    section = { key: step.id || `phase-${stepIndex}`, phase, label, tools: [] }
+    section = { key: step.id || `phase-${stepIndex}`, phase, label, tools: [], modelRequests: [] }
     entries.push(section)
   }
   section.tools.push(...stepTools)
+  section.modelRequests.push(...(step.modelRequests || []))
   return entries
 }, []))
 const tools = computed(() => sections.value.flatMap(section => section.tools))
-const activeRequest = computed(() => tools.value.flatMap(entry => entry.tool.requests || [])
+const activeRequest = computed(() => [...tools.value.flatMap(entry => entry.tool.requests || []),
+  ...sections.value.flatMap(section => section.modelRequests)]
   .findLast(request => activeRequestStates.has(request.status)))
 const activeLabel = computed(() => {
   const request = activeRequest.value
-  if (request) return `${request.label || 'Graph request'} · ${requestStatus(request, now.value)}`
+  if (request) return request.kind === 'model_request' ? requestStatus(request, now.value)
+    : `${request.label || 'Graph request'} · ${requestStatus(request, now.value)}`
   const phase = props.steps.at(-1)?.phase
   if (phase === 'api' && tools.value.at(-1)?.tool.finishedAt) return 'Reviewing retrieval results'
   return phaseLabels[phase] || 'Preparing your request…'

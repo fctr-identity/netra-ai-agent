@@ -90,8 +90,10 @@ class EntraAPIClient:
                     raise
                 http_diagnostic(operation, started, attempt, status=response.status_code)
                 if response.status_code in (429, 503, 504):
-                    delay = response.headers.get('Retry-After', '')
-                    fields = {'retry_after_seconds': min(int(delay), 86400)} if delay.isdigit() else {}
+                    from src.core.retry_status import retry_after_seconds
+                    delay = retry_after_seconds(response.headers)
+                    fields = {'retry_after_seconds': delay} if delay is not None else {}
+                    fields['reason'] = 'rate_limit' if response.status_code == 429 else 'temporary_error'
                     # Reports a transient response, not a promise that another retry will occur.
                     emit_progress(context, 'retry_wait', **fields)
                 return response

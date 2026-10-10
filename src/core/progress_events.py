@@ -19,6 +19,7 @@ TOOLS = {
     'execute_test_query_api': 'Check API retrieval',
     'execute_test_query_sql': 'Check database query',
     'load_artifacts': 'Read saved results', 'save_artifact': 'Save retrieval evidence',
+    'inspect_test_result': 'Read saved test data',
 }
 REQUEST_STATES = {'running', 'retrying', 'retry_wait', 'success', 'empty',
                   'failed', 'cancelled', 'unknown', 'timed_out'}
@@ -38,12 +39,14 @@ def public_progress(details):
     if not isinstance(details, dict):
         return None
     kind = details.get('kind')
-    if kind not in {'api_test_request', 'graph_request', 'api_test_end'}:
+    if kind not in {'api_test_request', 'graph_request', 'api_test_end', 'model_request'}:
         return None
     state = details.get('status')
     if state not in REQUEST_STATES:
         return None
     clean = {'kind': kind, 'status': state}
+    if details.get('reason') in {'rate_limit', 'temporary_error'}:
+        clean['reason'] = details['reason']
     if kind.startswith('api_test'):
         test_id = identifier(details.get('test_id'))
         if not test_id:
@@ -55,9 +58,9 @@ def public_progress(details):
             return None
         clean['request_id'] = request_id
         operation = details.get('operation')
-        known = operation in operation_labels() if isinstance(operation, str) else False
+        known = kind != 'model_request' and isinstance(operation, str) and operation in operation_labels()
         clean['operation'] = operation if known else 'unknown'
-        clean['label'] = operation_labels()[operation] if known else 'Graph request'
+        clean['label'] = 'AI provider' if kind == 'model_request' else operation_labels()[operation] if known else 'Graph request'
     for field, maximum in [('elapsed_ms', 86400000), ('retry_after_seconds', 86400), ('attempt', 100)]:
         value = details.get(field)
         if type(value) in (int, float) and 0 <= value <= maximum:

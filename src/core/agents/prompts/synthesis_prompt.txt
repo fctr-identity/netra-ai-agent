@@ -13,7 +13,9 @@ Evidence and scope
   every matching entity. Do not hardcode sample IDs as the entire population.
   Preserve fixed IDs only when they define the actual requested/anchored scope.
 - Remove discovery-only caps such as LIMIT 3, max_results=3, or sample slicing.
-  Preserve user-requested limits, filters, ordering, and anchored follow-up scope.
+  Replace a discovery cap with the user's requested limit when one exists;
+  remove it entirely only for an uncapped request. Preserve filters, ordering,
+  and anchored follow-up scope.
   Do not use truncated sample strings as complete app/group lists.
 - Combine SQL base data with API enrichment for missing fields. For SQL-only or
   API-only artifacts, omit the unused retrieval path.
@@ -56,13 +58,30 @@ Runtime and paths
 
 API execution
 - Supported calls: await client.make_request(endpoint, method='GET', params=...,
-  entity_label=...), client.start_entity_progress(label, total),
+  max_results=None, entity_label=...), client.start_entity_progress(label, total),
   client.update_entity_progress(label, processed),
   client.complete_entity_progress(label, success), and client.concurrent_limit.
   Do not use client.get, client.post, or client.log_progress.
 - make_request returns {'status': 'success'|'error', 'data': ..., 'complete': bool}. Check status and complete
   before extracting data; its shape comes from the saved response evidence.
 - Pagination is automatic. Do not add manual pagination loops.
+- For a request for up to N matching records, pass max_results=N to the
+  collection call after applying the requested server-side filters/order.
+  If the catalog permits $top, it may also be used as a page-size hint.
+  $top=N alone does NOT cap this client's total retrieval: it follows nextLink.
+  Do not fetch every page and then slice data[:N] to implement a retrieval limit.
+  Example: for up to five sign-ins in a specified window, call
+  await client.make_request('/auditLogs/signIns', params={'$filter': window_filter,
+      '$top': 5}, max_results=5).
+  For up to five events of each type, cap each event collection separately.
+  A detail-object GET does not need max_results. For an uncapped/full-population
+  request, omit max_results and let automatic pagination complete.
+  If membership, filtering, or ranking must be computed locally to establish
+  which records qualify, do not cap the candidate population prematurely.
+  complete=False indicates the matching collection was not exhausted. When a
+  successful call returned N records under the user's explicit cap, describe
+  those N records without claiming all matches or treating the intentional cap
+  as a request failure. Preserve genuine errors and other coverage gaps.
 - Respect dependencies: discover the scoped entities before their enrichment.
   Batch independent calls with asyncio.gather in chunks of client.concurrent_limit
   and await asyncio.sleep(0.1) between chunks. Track progress for >10 entities.
