@@ -50,13 +50,12 @@ Microsoft Graph and Entra administration.
 
 ## From a question to an investigation
 
-<!-- Replace the illustrative conversation below with the approved Netra AI demo GIF when ready. -->
+Watch Netra AI retrieve 300 demo users, then use the saved results to find the
+30 disabled accounts in a follow-up.
 
-An example conversation to try with your own group names:
+![Netra AI retrieves 300 users and filters the saved results in a follow-up](media/demo/netra-ai-demo-1.gif)
 
-> 1. List members of the Engineering group with their names, email, and enabled status.
-> 2. Now show which enterprise apps are assigned to those users, directly or through their direct groups.
-> 3. From those results, show only disabled users.
+[Watch or download the full video](media/demo/netra-ai-demo-1.mp4).
 
 ## Why Netra AI?
 
