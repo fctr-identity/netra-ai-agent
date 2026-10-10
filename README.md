@@ -52,14 +52,11 @@ CLI, or optional Microsoft Teams integration.
 
 ## Why Netra?
 
-Administrator questions often cross users, groups, applications, and policies.
-Netra connects those records, processes the data, and presents answers in one
-application—with a web UI, CLI, tables, and exports included.
+### How does Netra compare with other Entra AI tools and MCP servers?
 
-For teams evaluating Entra AI tools and MCP servers, **Netra brings the complete
-workflow into one self-hosted application**: live Graph access, fast local SQL,
-bulk processing outside the model's context, and follow-up conversations—with
-your choice of AI provider.
+**Netra brings the complete investigation workflow into one self-hosted product**—from
+finding and processing directory data to follow-up conversations and exports.
+Its strength is how these capabilities work together. Here's what sets Netra apart:
 
 - 📊 **More data, less model context.** Code processes the records; the model receives compact previews and focused results instead of entire intermediate datasets.
 - ⚡ **Fast SQL plus live Graph access.** Optional SQLite snapshots speed up repeat questions, while live APIs provide fresh or additional data.
