@@ -1,11 +1,51 @@
-# Netra
+<div align="center">
+  <a href="https://fctr.io">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="./media/brand/fctr-lockup-reverse.png">
+      <source media="(prefers-color-scheme: light)" srcset="./media/brand/fctr-lockup-primary.png">
+      <img src="./media/brand/fctr-lockup-primary.png" alt="Fctr" width="96">
+    </picture>
+  </a>
 
-**Your complete workspace for Microsoft Entra ID investigations.**
+  <br>
 
-Netra is an open-source AI agent for Microsoft Entra ID (currently supporting
-read-only endpoints). Ask questions in plain English, explore your directory,
-and keep investigating in the same conversation. Run it locally with your
-preferred supported LLM provider.
+  <h1>Netra AI Agent for Microsoft Entra ID</h1>
+
+  <p>
+    <a href="#quick-start-docker">Quick start</a> ·
+    <a href="#try-these-questions">Example questions</a> ·
+    <a href="#why-netra">Why Netra</a> ·
+    <a href="#ai-providers">AI providers</a> ·
+    <a href="#documentation">Docs</a> ·
+    <a href="#support-and-contributing">Support</a>
+  </p>
+
+  <p>
+    <img src="./media/badges/preview.svg" alt="Early preview" width="120" height="22">
+    <a href="docker-compose.yml">
+      <img src="./media/badges/docker.svg" alt="Docker: build from source" width="170" height="22">
+    </a>
+    <a href="docs/INSTALLATION.md">
+      <img src="./media/badges/python.svg" alt="Python 3.12" width="88" height="22">
+    </a>
+  </p>
+
+  <p>Built by the Fctr Identity team · Not affiliated with Microsoft</p>
+</div>
+
+---
+
+**Netra means “eye” in Sanskrit.** Netra is an open-source AI agent for Microsoft
+Entra ID (currently supporting read-only endpoints)—a complete workspace for
+exploring and understanding your directory.
+
+Netra is built on **Tako AI Agent**, originally developed for **Okta**. It adapts
+Tako's agent platform, conversational UI, and database-plus-API approach for
+Microsoft Entra ID and Microsoft Graph.
+
+Ask questions in plain English and keep investigating in the same conversation.
+Run Netra locally with your preferred supported LLM provider, through the browser,
+CLI, or optional Microsoft Teams integration.
 
 ## Why Netra?
 
