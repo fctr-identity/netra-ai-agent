@@ -55,11 +55,20 @@ An example conversation to try with your own group names:
 
 ## Why Netra?
 
-**How does Netra compare with other Entra AI tools and MCP servers?** Netra brings
-the complete investigation workflow into one self-hosted application: interface,
-data processing, conversation history, and exports. Here's why that matters:
+**How does Netra compare with other Entra AI tools and MCP servers?**
 
-- 📊 **More data, less model context.** Code processes retrieved records; the model receives compact previews and focused results instead of entire intermediate datasets.
+**Your directory shouldn't have to fit inside an LLM's context window.** Asking
+for 100, 10,000, or 50,000 users should not require passing every user's record
+through the model. Netra uses code to retrieve and process directory data, saves
+results outside the model's context, and makes retrieved rows available in tables
+and CSV exports. The model works with compact previews and focused results;
+those previews do not set the size of your saved dataset.
+
+Compared with MCP tools that return raw records directly into model context,
+this approach reduces context usage as datasets grow. Netra packages it with a
+web UI, follow-ups, and exports in one application. Here's why that matters:
+
+- 📊 **Work with datasets beyond the model's context window.** Process records in code, explore retrieved results in tables, and export all saved result rows without asking the model to reproduce them.
 - ⚡ **Fast SQL plus live Graph access.** Optional SQLite snapshots speed up repeat questions, while live APIs provide fresh or additional data.
 - 💬 **Keep the conversation going.** Follow-ups build on previous results, so you can narrow a population or investigate its applications.
 - 🔎 **Investigate across your directory.** Netra coordinates SQL, API queries, and analysis for questions that span multiple resources.
@@ -67,8 +76,9 @@ data processing, conversation history, and exports. Here's why that matters:
 - 🏠 **Run locally. Choose your model.** Self-host the application and bring your preferred supported AI provider.
 
 **Beta:** one commercial Entra tenant per deployment. Results depend on permissions,
-licensing, data freshness, and model quality. Large-tenant capacity and comparative
-performance have not yet been benchmarked.
+licensing, data freshness, model quality, and execution limits. The sizes above
+illustrate the approach, not validated capacity: 10,000- and 50,000-user Netra runs
+and comparative performance have not yet been benchmarked.
 
 ## Try these questions
 
@@ -166,7 +176,7 @@ Report suspected vulnerabilities privately through the [security policy](.github
 - 🐛 [GitHub Issues](https://github.com/fctr-identity/netra-ai-agent/issues) — Bugs and feature requests; redact credentials and tenant data.
 - 📧 [support@fctr.io](mailto:support@fctr.io) — General support.
 - 🤝 Contributions welcome — improve docs, suggest questions, or extend Graph coverage. Discuss larger changes in an issue and follow the [development guide](docs/DEVELOPMENT.md).
-- ❤️ Thanks to our [contributors](https://github.com/fctr-identity/netra-ai-agent/graphs/contributors).
+- [Contributors](https://github.com/fctr-identity/netra-ai-agent/graphs/contributors).
 
 ## License
 
@@ -174,7 +184,3 @@ Report suspected vulnerabilities privately through the [security policy](.github
 use is free. Resale, paid derived products, and hosted, SaaS, MSP, or multi-tenant
 service offerings require a separate commercial license. See the full terms and
 [third-party notices](THIRD_PARTY_NOTICES.md).
-
----
-
-Made with ❤️ by [Fctr Identity](https://fctr.io) for the Microsoft Entra community.
