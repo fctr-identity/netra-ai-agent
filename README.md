@@ -38,7 +38,7 @@ Named after the Sanskrit word for “eye,” **Netra** helps you see and underst
 Microsoft Entra ID. Ask about users, groups, applications, devices, and access in
 plain English, then explore the answers, ask follow-ups, and export the results.
 
-Netra is a **source-available AI agent (currently supporting read-only endpoints)**,
+Netra is a **source-available AI agent (currently supporting [read-only endpoints](docs/SUPPORTED_GRAPH_READS.md))**,
 with a web UI, CLI, and optional Microsoft Teams integration. It uses the same
 agent harness as [Tako AI Agent for Okta](https://github.com/fctr-id/okta-ai-agent),
 adapted for Microsoft Entra ID.
