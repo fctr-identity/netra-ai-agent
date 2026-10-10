@@ -4,6 +4,7 @@ Released October 10, 2026. Docker: `fctrid/netra-ai-agent-for-entra:0.1.0-beta.2
 (Linux AMD64). The `beta` and `latest` tags follow this release.
 
 - Updated Fctr portal branding, browser icons, and Netra AI display names.
+- Removed the unused Special Tools button, dialog, and startup request from the chat UI.
 - Clearer README, ordered Quick Start, AI provider guidance, and Teams setup.
 - Fctr Source-Available License 1.0 and private security-reporting instructions.
 - Corrected Teams package website, privacy, and license links.

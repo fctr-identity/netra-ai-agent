@@ -298,15 +298,11 @@
                         </div>
                         <p class="suggestions-note">Simple: focused lookups. Advanced: compare related data and may take longer.</p>
 
-                        <!-- Special Tools Button -->
-                        <div class="special-tools-container">
-                            <button class="special-tools-btn" @click="showAllSuggestions = !showAllSuggestions" :aria-expanded="showAllSuggestions">
+                        <!-- More example questions -->
+                        <div class="suggestion-actions">
+                            <button class="suggestion-toggle" @click="showAllSuggestions = !showAllSuggestions" :aria-expanded="showAllSuggestions">
                                 <span>{{ showAllSuggestions ? 'Fewer ideas' : 'More ideas' }}</span>
                                 <v-icon :icon="showAllSuggestions ? 'mdi-chevron-up' : 'mdi-chevron-down'" size="16" />
-                            </button>
-                            <button class="special-tools-btn" @click="showSpecialToolsModal = true">
-                                <v-icon icon="mdi-tools" size="18" />
-                                <span>Special Tools</span>
                             </button>
                         </div>
                     </div>
@@ -314,67 +310,6 @@
 
         </main>
         
-        <!-- Special Tools Modal -->
-        <v-dialog v-model="showSpecialToolsModal" max-width="800px">
-            <v-card class="special-tools-modal">
-                <v-card-title class="modal-header">
-                    <div class="modal-title">
-                        <v-icon icon="mdi-tools" size="24" class="title-icon" />
-                        <span>Special Tools</span>
-                    </div>
-                    <v-btn icon="mdi-close" variant="text" @click="showSpecialToolsModal = false" />
-                </v-card-title>
-                
-                <v-card-text class="modal-content">
-                    <!-- Info Note -->
-                    <div class="info-note">
-                        <v-icon icon="mdi-information" size="20" style="color: var(--primary)" />
-                        <span>These tools will automatically be invoked when your query matches the criteria. You don't need to do anything special.</span>
-                    </div>
-                    
-                    <!-- Loading State -->
-                    <div v-if="specialToolsLoading" class="loading-state">
-                        <v-progress-circular indeterminate color="primary" />
-                        <p>Loading special tools...</p>
-                    </div>
-                    
-                    <!-- Error State -->
-                    <div v-else-if="specialToolsError" class="error-state">
-                        <v-icon icon="mdi-alert-circle" color="error" size="48" />
-                        <p>{{ specialToolsError }}</p>
-                    </div>
-                    
-                    <!-- Tools Grid -->
-                    <div v-else-if="specialTools.length > 0" class="tools-grid">
-                        <div v-for="(tool, index) in specialTools" 
-                             :key="index" 
-                             class="tool-card"
-                             @click="selectToolExample(tool)">
-                            <div class="tool-header">
-                                <h3 class="tool-name">{{ tool.name }}</h3>
-                            </div>
-                            <p class="tool-description">{{ extractSpecialToolText(tool.description) }}</p>
-                            <div v-if="tool.examples && tool.examples.length > 0" class="tool-examples">
-                                <p class="examples-label">Try asking:</p>
-                                <ul class="examples-list">
-                                    <li v-for="(example, i) in tool.examples.slice(0, 2)" 
-                                        :key="i"
-                                        class="example-item">
-                                        "{{ example }}"
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Empty State -->
-                    <div v-else class="empty-state">
-                        <v-icon icon="mdi-information-outline" size="48" />
-                        <p>No special tools available</p>
-                    </div>
-                </v-card-text>
-            </v-card>
-        </v-dialog>
     </AppLayout>
 </template>
 
@@ -390,7 +325,6 @@ import { computed, ref, watch, nextTick, onMounted, onBeforeUnmount, inject } fr
 import { useFetchStream } from '@/composables/useFetchStream'
 import { useSanitize } from '@/composables/useSanitize'
 import { useReactStream } from '@/composables/useReactStream'
-import { useSpecialTools } from '@/composables/useSpecialTools'
 import { useHistory } from '@/composables/useHistory'
 import ConversationCard from '@/components/messages/ConversationCard.vue'
 import DataDisplay from '@/components/messages/DataDisplay.vue'
@@ -1081,10 +1015,6 @@ watch([reactProcessing, reactResults], ([processing, results]) => {
     }
 })
 
-// Special Tools
-const { tools: specialTools, loading: specialToolsLoading, error: specialToolsError, fetchTools } = useSpecialTools()
-const showSpecialToolsModal = ref(false)
-
 /**
  * Response data state
  */
@@ -1477,36 +1407,6 @@ const selectSuggestion = (suggestion) => {
 }
 
 /**
- * Handles clicking on a special tool card
- * Populates the first example query into the search field
- * @param {Object} tool - The selected tool object
- */
-const selectToolExample = (tool) => {
-    if (tool.examples && tool.examples.length > 0) {
-        // Use the first example
-        userInput.value = sanitizeQuery(tool.examples[0])
-        showSpecialToolsModal.value = false
-        
-        // Focus input field
-        nextTick(() => {
-            if (searchTextarea.value) {
-                searchTextarea.value.focus()
-            }
-        })
-    }
-}
-
-/**
- * Extracts text after "SPECIAL TOOL:" from description
- * @param {String} description - The full description text
- * @returns {String} Text after SPECIAL TOOL: or original description
- */
-const extractSpecialToolText = (description) => {
-    const match = description.match(/SPECIAL TOOL:\s*(.+)/s)
-    return match ? match[1].trim() : description
-}
-
-/**
  * Retry history refresh with exponential backoff until query appears
  * @param {String} queryText - The query to check for
  * @param {Number} maxRetries - Maximum number of retry attempts
@@ -1735,9 +1635,6 @@ onMounted(async () => {
             localStorage.setItem('agentMode', modeParam)
         }
         
-        // Fetch special tools on mount
-        await fetchTools()
-
         // History Event Listeners
         window.addEventListener('netra:select-history', handleSidebarSelectEvent)
         window.addEventListener('netra:new-session', handleNewSessionEvent)
@@ -2856,14 +2753,14 @@ onMounted(() => {
 }
 
 /* Quiet secondary actions beneath the prompt suggestions. */
-.special-tools-container {
+.suggestion-actions {
     margin-top: 14px;
     display: flex;
     gap: 12px;
     justify-content: center;
 }
 
-.special-tools-btn {
+.suggestion-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2880,7 +2777,7 @@ onMounted(() => {
     box-shadow: none;
 }
 
-.special-tools-btn:hover {
+.suggestion-toggle:hover {
     background: var(--surface-muted);
     border-color: var(--border-strong);
     color: var(--text-primary);
@@ -2888,144 +2785,10 @@ onMounted(() => {
     box-shadow: none;
 }
 
-.special-tools-btn:active {
+.suggestion-toggle:active {
     transform: translateY(0);
 }
 
-.special-tools-btn .sparkle-icon {
-    opacity: 0.9;
-}
-
-/* Special Tools Modal */
-.special-tools-modal {
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: none;
-    border: 1px solid var(--border-strong);
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 24px;
-    background: #ffffff;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.modal-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 2#ffffff;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.modal-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 20px;
-    font-weight: 700;
-    color: #1a1a1a;
-}
-
-.title-icon {
-    color: var(--primary);
-}
-
-.modal-content {
-    padding: 16px;
-    max-height: 600px;
-    overflow-y: auto;
-}
-
-/* Loading/Error/Empty States */
-.loading-state, .error-state, .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    min-height: 300px;
-    color: #6b7280;
-}
-
-.loading-state p, .error-state p, .empty-state p {
-    font-size: 14px;
-    margin: 0;
-}
-
-/* Info Note */
-.info-note {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    background: var(--primary-light);
-    border: 1px solid rgba(var(--primary-rgb), 0.18);
-    border-radius: 8px;
-    margin-bottom: 20px;
-    font-size: 13px;
-    color: var(--primary-dark);
-    line-height: 1.5;
-}
-
-/* Tools List - Row Layout */
-.tools-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.tool-card {
-    padding: 20px;
-    background: #ffffff;
-    border: 2px solid #d1d5db;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.tool-card:hover {
-    border-color: var(--primary);
-    background: #f8fbff;
-    transform: translateX(4px);
-}
-
-.tool-header {
-    margin-bottom: 8px;
-}
-
-.tool-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin: 0;
-}
-
-.tool-description {
-    font-size: 12px;
-    color: #6b7280;
-    line-height: 1.5;
-    margin: 0;
-}
-
-.tool-examples {
-    display: none;
-}
-
-.examples-label {
-    display: none;
-}
-
-.examples-list {
-    display: none;
-}
-
-.example-item {
-    display: none;
-}
 @media (max-width: 600px) {
     .content-area:not(.has-results) .search-container { padding: 0 0 24px; }
     .content-area:not(.has-results) .query-card { padding: 14px; }
