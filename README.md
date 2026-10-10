@@ -77,7 +77,7 @@ web UI, follow-ups, and exports in one application. Here's why that matters:
 - ⚡ **Fast SQL plus live Graph access.** Optional SQLite snapshots speed up repeat questions, while live APIs provide fresh or additional data.
 - 💬 **Keep the conversation going.** Follow-ups build on previous results, so you can narrow a population or investigate its applications.
 - 🔎 **Investigate across your directory.** Netra AI coordinates SQL, API queries, and analysis for questions that span multiple resources.
-- 🔁 **Reuse successful workflows.** When enabled, compatible saved procedures run again, with fresh orchestration if reuse fails.
+- 🔁 **Reuse code from successful queries.** When enabled, Netra AI reruns compatible saved code against current data, saving time and model tokens. If reuse fails, it plans a fresh query.
 - 🏠 **Run locally. Choose your model.** Self-host the application and use your preferred supported AI provider.
 
 **Beta:** one commercial Entra tenant per deployment. Results depend on permissions,
