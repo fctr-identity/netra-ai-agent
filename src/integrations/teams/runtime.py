@@ -114,6 +114,6 @@ async def sync_status() -> dict:
     async with db.get_session() as session:
         sync = await db.get_last_completed_sync(session, settings.tenant_id)
         if not sync:
-            return {"content": "No completed data sync yet. Start a sync in the Netra web app."}
+            return {"content": "No completed data sync yet. Start a sync in the Netra AI web app."}
         return {"content": f"Last completed sync: {sync.end_time}. Users: {sync.users_count or 0}; "
                            f"groups: {sync.groups_count or 0}; apps: {sync.apps_count or 0}."}

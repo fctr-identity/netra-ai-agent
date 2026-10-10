@@ -20,7 +20,7 @@
                         <div class="sync-title-icon"><v-icon size="18" aria-hidden="true">mdi-database-outline</v-icon></div>
                         <div class="sync-title-copy">
                             <h3>Entra data sync</h3>
-                            <p>Data available to Netra</p>
+                            <p>Data available to Netra AI</p>
                         </div>
                         <button type="button" class="close-sync" aria-label="Close sync panel" @click="showDropdown = false">
                             <v-icon size="18" aria-hidden="true">mdi-close</v-icon>

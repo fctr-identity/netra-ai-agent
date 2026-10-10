@@ -2,7 +2,7 @@
   <AppLayout :showHeader="true" :showLogout="false" contentClass="auth-content">
     <section class="auth-shell animate-entry">
       <div class="auth-hero">
-        <h1 class="auth-title">Welcome to <span>Netra AI Agent.</span></h1>
+        <h1 class="auth-title">Welcome to <span>Netra AI.</span></h1>
         <p class="auth-description">Your AI assistant for Entra.</p>
       </div>
 

@@ -1,4 +1,4 @@
-# Netra endpoint catalog
+# Netra AI endpoint catalog
 
 Runtime inputs are `graph_get_endpoints.json` and `graph_read_operations.json`.
 They describe the supported read-only Graph subset and contain no documentation

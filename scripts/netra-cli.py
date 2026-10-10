@@ -518,7 +518,7 @@ async def run_query(query: str, script_only: bool = False, session_id: Optional[
 
 
 async def main() -> int:
-    parser = argparse.ArgumentParser(description="Netra CLI Agent 0.1 POC")
+    parser = argparse.ArgumentParser(description="Netra AI CLI")
     parser.add_argument("query", nargs="?", help="The query to execute")
     parser.add_argument("--scriptonly", action="store_true", help="Only generate the script, do not execute")
     parser.add_argument("--session-id", help="Optional session id for grouping CLI turns")
@@ -541,7 +541,7 @@ async def main() -> int:
             evaluation.finish(exit_code)
     
     if args.interactive:
-        print(f"{Colors.HEADER}{Colors.BOLD}Netra CLI Agent Interactive Mode{Colors.ENDC}")
+        print(f"{Colors.HEADER}{Colors.BOLD}Netra AI CLI Interactive Mode{Colors.ENDC}")
         print("Type 'exit' or 'quit' to end session.")
         interactive_session_id = args.session_id or generate_correlation_id("cli-session")
         exit_code = 0

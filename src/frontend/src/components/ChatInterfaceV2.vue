@@ -224,7 +224,7 @@
                 <div v-show="!hasResults" class="hero-card" :class="{ 'home-reveal-pending': isReturningHome }">
                     <div class="title-wrapper">
                         <h1 class="main-title">
-                            Hi, I’m <span class="title-accent">Netra.</span>
+                            Hi, I’m <span class="title-accent">Netra AI.</span>
                         </h1>
                         <p class="main-subtitle">Let’s explore your Entra tenant.</p>
                     </div>
@@ -258,7 +258,7 @@
                                     @blur="isFocused = false"
                                     @input="autoResizeTextarea"
                                     :placeholder="hasResults ? 'Ask a follow-up question' : 'Ask about your users, apps, authenticators, and more…'"
-                                    aria-label="Message Netra"
+                                    aria-label="Message Netra AI"
                                     aria-describedby="query-disclaimer"
                                     class="query-textarea"
                                     rows="1"
@@ -1122,7 +1122,7 @@ const stopProcessing = () => {
         return
     }
     
-    // Netra flow
+    // Netra AI flow
     if (streamController.value) {
         streamController.value.abort();
         streamController.value = null;
@@ -1585,7 +1585,7 @@ const sendQuery = async () => {
             return
         }
 
-        // Netra flow (existing)
+        // Netra AI flow (existing)
         const streamResponse = await postStream('/api/query', { query: sanitizedQuery })
         streamController.value = streamResponse
 

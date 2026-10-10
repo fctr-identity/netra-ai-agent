@@ -12,7 +12,7 @@ virtual environment's Python with an absolute script path from cron or Windows
 Task Scheduler when needed. An OS lock coordinates CLI and
 UI syncs. A stale process history does not prevent a fresh UI sync.
 
-### What Netra syncs
+### What Netra AI syncs
 
 Sync copies the following directory data into local SQLite for fast queries and
 joins. **Default** describes the shipped configuration; required Graph permissions
@@ -51,7 +51,7 @@ Use `ENTRA_USER_CUSTOM_ATTRIBUTES` for comma-separated Graph user properties,
 directory/schema extensions, and dotted `onPremisesExtensionAttributes` fields.
 Selected values are stored in `users.custom_attributes`; missing values remain
 null. Open extensions and custom security attributes are outside this initial
-sync. Netra creates `sqlite_db/netra.db` with new
+sync. Netra AI creates `sqlite_db/netra.db` with new
 directory tables while retaining the shared login, history, result, and procedure
 table designs. Databases from other directory providers are not migrated or reused.
 
@@ -75,4 +75,4 @@ Tabular answers are saved as CSVs; the CLI prints the output path and a short
 preview. Use `--session-id <name>` to group related questions, or `--scriptonly`
 to generate the final retrieval script without executing it. Discovery may still
 make read-only Graph calls in script-only mode. Exported retrieval scripts depend
-on this Netra checkout and its configured virtual environment.
+on this Netra AI checkout and its configured virtual environment.

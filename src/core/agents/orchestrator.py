@@ -69,9 +69,9 @@ from src.data.schemas.runtime_storage import RUNTIME_ROOT
 logger = get_logger("netra_ai_agent")
 
 BUDGET_EXHAUSTED_USER_MESSAGE = (
-    "Netra reached its processing limit before completing this request. "
+    "Netra AI reached its processing limit before completing this request. "
     "Please try again, or split the request into smaller questions. "
-    "If this keeps happening, contact your Netra administrator."
+    "If this keeps happening, contact your Netra AI administrator."
 )
 
 

@@ -5,9 +5,9 @@
   "id": "<TEAMS_APP_ID>",
   "developer": {
     "name": "Netra AI",
-    "websiteUrl": "https://github.com/fctr-id/netra-ai-agent",
-    "privacyUrl": "https://github.com/fctr-id/netra-ai-agent#runtime-boundaries-and-data",
-    "termsOfUseUrl": "https://github.com/fctr-id/netra-ai-agent/blob/main/LICENSE"
+    "websiteUrl": "https://github.com/fctr-identity/netra-ai-agent",
+    "privacyUrl": "https://github.com/fctr-identity/netra-ai-agent#security-and-privacy",
+    "termsOfUseUrl": "https://github.com/fctr-identity/netra-ai-agent/blob/main/LICENSE"
   },
   "name": {"short": "Netra AI", "full": "Netra AI for Entra"},
   "description": {

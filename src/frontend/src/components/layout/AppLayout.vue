@@ -3,14 +3,14 @@
         <!-- Header -->
         <header v-if="showHeader" class="floating-header">
             <div class="header-content">
-                <!-- Brand section: Fctr lockup + Netra AI Agent -->
+                <!-- Brand section: Fctr lockup + Netra AI -->
                 <div class="brand">
                     <img src="@/assets/fctr-lockup-primary.png" alt="Fctr" />
                     
                     <div class="brand-divider"></div>
                     <div class="title-with-badge">
                         <div class="netra-title-container">
-                            <span class="netra-name">Netra AI Agent</span>
+                            <span class="netra-name">Netra AI</span>
                         </div>
                         <div v-if="showLogout" class="beta-badge">BETA</div>
                     </div>

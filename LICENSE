@@ -1,11 +1,11 @@
 # Fctr Source-Available License 1.0
 
-Netra AI Agent
+Netra AI
 Copyright © 2025–2026 Fctr. All rights reserved.
 
 ## 1. Scope
 
-This license governs the Netra AI Agent source code, executable distributions,
+This license governs the Netra AI source code, executable distributions,
 and documentation provided under this license (the "Software"), including
 modified versions of that material. "Fctr" refers to the copyright holder
 identified above. "You" means the individual or organization exercising the
@@ -68,10 +68,10 @@ those credentials within your own authorized deployment is permitted.
 Copies and modified versions must retain applicable copyright, license, and
 attribution notices, including Fctr and Tako attribution. Distributed modified
 files must identify that changes were made. Documentation or user guides derived
-from this project must acknowledge Netra AI Agent and its origins in Fctr's Tako
+from this project must acknowledge Netra AI and its origins in Fctr's Tako
 AI Agent.
 
-This license grants no rights to use Fctr, Netra, or Tako trademarks except for
+This license grants no rights to use Fctr, Netra AI, or Tako trademarks except for
 accurate attribution. You may not imply endorsement by the original authors.
 
 ## 6. Contributions and future releases

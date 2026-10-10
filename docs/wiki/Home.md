@@ -1,6 +1,6 @@
-# Netra AI Agent
+# Netra AI
 
-Netra is a source-available AI agent in beta for asking administrator questions about Microsoft
+Netra AI is a source-available AI agent in beta for asking administrator questions about Microsoft
 Entra ID. It combines read-only Microsoft Graph queries with selected local
 snapshots, a conversational UI, and optional Teams personal chat.
 
@@ -10,11 +10,10 @@ small and large tenant scenarios; enterprise-scale performance is not yet establ
 ## Start here
 
 - [Docker image](https://hub.docker.com/r/fctrid/netra-ai-agent-for-entra) (`0.1.0-beta.1`, Linux AMD64)
-- [Install Netra with uv or Docker](https://github.com/fctr-identity/netra-ai-agent/blob/main/docs/INSTALLATION.md)
+- [Install Netra AI with uv or Docker](https://github.com/fctr-identity/netra-ai-agent/blob/main/docs/INSTALLATION.md)
 - [Register the Entra app and configure read permissions](https://github.com/fctr-identity/netra-ai-agent/blob/main/docs/INSTALLATION.md#entra-app-registration)
-- [See synced datasets and fields](https://github.com/fctr-identity/netra-ai-agent/blob/main/docs/DATA_SYNC.md#what-netra-syncs)
+- [See synced datasets and fields](https://github.com/fctr-identity/netra-ai-agent/blob/main/docs/DATA_SYNC.md#what-netra-ai-syncs)
 - [Sync data and run CLI queries](https://github.com/fctr-identity/netra-ai-agent/blob/main/docs/DATA_SYNC.md)
-- [Understand runtime controls, storage, and cleanup](https://github.com/fctr-identity/netra-ai-agent/blob/main/docs/RUNTIME_AND_DATA.md)
 - [Run development checks](https://github.com/fctr-identity/netra-ai-agent/blob/main/docs/DEVELOPMENT.md)
 - [Browse Simple and Advanced administrator questions](https://github.com/fctr-identity/netra-ai-agent/blob/main/docs/QUESTION_LIBRARY.md)
 - [See every supported Graph GET endpoint](https://github.com/fctr-identity/netra-ai-agent/blob/main/docs/SUPPORTED_GRAPH_READS.md)

@@ -1,4 +1,4 @@
-# Netra v0.1.0-beta.1
+# Netra AI v0.1.0-beta.1
 
 First beta for Microsoft Entra ID, built on the same agent harness as Tako AI Agent.
 

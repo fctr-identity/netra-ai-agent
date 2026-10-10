@@ -15,7 +15,7 @@ details in that initial message.
 
 Include the following in your private report:
 
-- Affected Netra version or commit and relevant deployment details.
+- Affected Netra AI version or commit and relevant deployment details.
 - A description of the issue and its potential impact.
 - Steps to reproduce using synthetic or redacted data.
 - Relevant sanitized logs or screenshots, if available.
@@ -30,18 +30,20 @@ address confirmed vulnerabilities. We coordinate with the reporter on fixes
 and disclosure, including a security advisory when appropriate. Please allow
 time for assessment and remediation before publishing details.
 
-Security fixes target the latest Netra release, including the current beta.
+Security fixes target the latest Netra AI release, including the current beta.
 Users of older versions may need to upgrade; backports are not guaranteed.
 Reports and fixes are handled on a best-effort basis, without a guaranteed
 response or resolution deadline.
 
 ## Security disclaimer
 
-We work to improve Netra's security, but no software is guaranteed to be free
-of vulnerabilities. Netra is provided "as is," without warranty, under the
+We work to improve Netra AI's security, but no software is guaranteed to be free
+of vulnerabilities. Netra AI is provided "as is," without warranty, under the
 [license](../LICENSE). Users are responsible for evaluating its suitability,
 configuring access and permissions, protecting credentials and tenant data,
 and keeping their deployments up to date.
 
-See [runtime and data handling](../docs/RUNTIME_AND_DATA.md) for documented
-controls and limitations. This policy does not change the license terms.
+Generated scripts run with the application's operating-system privileges;
+code validation is not an operating-system sandbox. Protect local directory
+snapshots, conversation history, saved results, and logs as sensitive data.
+This policy does not change the license terms.

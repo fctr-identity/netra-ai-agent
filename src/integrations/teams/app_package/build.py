@@ -93,7 +93,7 @@ def main(argv=None):
         parser.error(str(exc))
     print(f"\nTeams package created:\n{output}")
     print("\nUpload this ZIP in Teams: Apps > Manage your apps > Upload an app > Upload a custom app.")
-    print("Do not extract the ZIP. Your Netra server and Azure Bot must already be configured.")
+    print("Do not extract the ZIP. Your Netra AI server and Azure Bot must already be configured.")
     return 0
 
 

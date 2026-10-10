@@ -224,7 +224,7 @@ class TeamsBot:
         job["stage"] = "check_access"
         if not await self.authorizer.allowed(job["user"]):
             job["stage"] = "send_access_denied"
-            await self.send(job, {"outcome": "fail", "content": "You don't have access to Netra. Contact your administrator."})
+            await self.send(job, {"outcome": "fail", "content": "You don't have access to Netra AI. Contact your administrator."})
             await self.store.finish(job["id"], "denied", "sent")
             return
         command = job["query"].lower()

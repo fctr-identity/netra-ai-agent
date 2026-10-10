@@ -1,13 +1,13 @@
 # Third-party notices
 
-Netra includes modified code originally developed for Fctr's Tako AI Agent.
-Copyright © 2025–2026 Fctr. Netra's Fctr-licensed code is governed by LICENSE.
-Separately licensed third-party material remains under its own license; Netra's
+Netra AI includes modified code originally developed for Fctr's Tako AI Agent.
+Copyright © 2025–2026 Fctr. Netra AI's Fctr-licensed code is governed by LICENSE.
+Separately licensed third-party material remains under its own license; Netra AI's
 license does not replace those terms or revoke rights previously granted.
 
 The generated Graph catalogs derive structural definitions from Microsoft's
 `microsoftgraph/msgraph-metadata`, revision
-`15780e98e1082517bc7a39a6b75b356a085326d9`. Netra selects read operations,
+`15780e98e1082517bc7a39a6b75b356a085326d9`. Netra AI selects read operations,
 projects response fields, removes external context links, and adds curated notes.
 The metadata's MIT license notice follows, unchanged.
 

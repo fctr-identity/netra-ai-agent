@@ -1,6 +1,6 @@
 # AI providers and models
 
-Netra supports OpenAI, Google AI Studio, Google Vertex AI, Anthropic, Azure OpenAI,
+Netra AI supports OpenAI, Google AI Studio, Google Vertex AI, Anthropic, Azure OpenAI,
 AWS Bedrock, and OpenAI-compatible endpoints, including local models through Ollama.
 
 Set `AI_PROVIDER` and configure your provider's credentials and model IDs using
@@ -13,8 +13,8 @@ answer quality, speed, and cost vary by model.
 
 This list builds on
 [Tako's AI provider guide](https://github.com/fctr-id/okta-ai-agent#ai-provider-support)
-for the shared agent harness, with Netra's selected model updates. It is not a
-separate Netra compatibility certification or a guarantee of current provider
+for the shared agent harness, with Netra AI's selected model updates. It is not a
+separate Netra AI compatibility certification or a guarantee of current provider
 availability.
 
 | Provider | Model |
@@ -33,12 +33,12 @@ answers.
 ## Reasoning setting
 
 `AI_REASONING_EFFORT` optionally requests a shared reasoning setting for the
-agents. Netra accepts `minimal`, `low`, `medium`, `high`, `xhigh`, `true`, `false`,
+agents. Netra AI accepts `minimal`, `low`, `medium`, `high`, `xhigh`, `true`, `false`,
 and `none`; support for individual values depends on the provider and model.
 Higher effort can increase response time and cost.
 
 The sample configuration leaves this unset. To request more reasoning, add
-`AI_REASONING_EFFORT=high` to your configuration and restart Netra. If the model
+`AI_REASONING_EFFORT=high` to your configuration and restart Netra AI. If the model
 rejects it, use `none` or remove the setting and restart. An unset, blank, or
 `none` value sends no reasoning override; it does not disable a model's default
 reasoning. Use only settings supported by your chosen provider and model.
@@ -46,6 +46,6 @@ reasoning. Use only settings supported by your chosen provider and model.
 ## Data sent to the model
 
 Prompts and selected directory context go to your configured model provider,
-even when Netra itself runs locally. A compatible local model keeps inference
-on your infrastructure. Review the provider's data-handling terms and the
-[runtime and data guide](RUNTIME_AND_DATA.md).
+even when Netra AI itself runs locally. A compatible local model keeps inference
+on your infrastructure. Review your chosen provider's data-handling terms before
+sending tenant data.

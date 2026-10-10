@@ -3,7 +3,7 @@
     <section class="auth-shell animate-entry">
       <div class="auth-hero">
         <h1 class="auth-title">Create your admin account</h1>
-        <p class="auth-description">Set up your first admin account to get started with Netra.</p>
+        <p class="auth-description">Set up your first admin account to get started with Netra AI.</p>
       </div>
 
       <div class="auth-card">

@@ -2,7 +2,7 @@
 
 [Documentation guide](README.md) · [Supported endpoints and permissions](SUPPORTED_GRAPH_READS.md)
 
-These suggested questions are grounded in Netra's implemented catalog. They are
+These suggested questions are grounded in Netra AI's implemented catalog. They are
 not a list of passed live tests. The ten UI starters are adapted from the CLI
 evaluation scenarios; this library broadens the administrator use cases.
 
@@ -12,7 +12,7 @@ These labels do not predict response time. A tenant-wide Simple lookup can cost
 more than an Advanced investigation of one user.
 
 Replace text in square brackets with your own identifiers or values before
-submitting. If a name is ambiguous, ask Netra to show matching objects first.
+submitting. If a name is ambiguous, ask Netra AI to show matching objects first.
 
 ## Adapt a question to your tenant
 
@@ -27,7 +27,7 @@ submitting. If a name is ambiguous, ask Netra to show matching objects first.
 For a complete report, add: “Retrieve all pages needed for this population. If a
 limit, timeout, permission failure, or missing field prevents completion, label
 the report partial and state what is missing. Do not turn a sample into a total.”
-This expresses the reporting goal; it does not bypass Netra's execution limits.
+This expresses the reporting goal; it does not bypass Netra AI's execution limits.
 Large-tenant capacity is not established. Avoid starting with every user joined
 to every group, app, and event in one query.
 
@@ -121,7 +121,7 @@ Uses policy list/detail, named locations, and authentication strengths.
 | Advanced | Review configured policies for application [application ID]. Explain explicit and broad application targeting and exclusions; do not present this as a simulation of effective access. |
 
 Policy configuration, user registration, and observed sign-in outcomes are
-different evidence. Netra does not run a Conditional Access What If simulation.
+different evidence. Netra AI does not run a Conditional Access What If simulation.
 
 ## Roles and administrative units
 

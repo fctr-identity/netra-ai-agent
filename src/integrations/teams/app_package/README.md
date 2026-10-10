@@ -2,7 +2,7 @@
 
 This folder contains everything needed to build the installation ZIP: the Python
 builder, manifest template, and Fctr icons. It can be copied independently of the
-Netra server. Python 3.10 or newer is sufficient; no package installation, virtual
+Netra AI server. Python 3.10 or newer is sufficient; no package installation, virtual
 environment, network access, or secrets are needed to build the ZIP.
 
 **Script location:** `<repository-root>/scripts/build_teams_package.py`. The repository
@@ -38,7 +38,7 @@ From the repository root, to build without a prompt or choose where the file goe
 python scripts/build_teams_package.py --client-id YOUR-CLIENT-GUID --output path/to/Netra-AI-Teams.zip
 ```
 
-The template uses Netra's public repository, Security & Privacy section, and license
+The template uses Netra AI's public repository, Security & Privacy section, and license
 as its default developer links. To use your organization's deployment-specific
 pages, pass `--website`, `--privacy`, and `--terms` with the appropriate HTTPS URLs,
 or edit `manifest.template.json` before building.
@@ -52,8 +52,8 @@ the same client ID replaces its previous output ZIP.
 sources are included and derived from the repository's existing Fctr fingerprint
 logo. The ZIP contains only `manifest.json`, `color.png`, and `outline.png`.
 
-Building the package does not create Azure resources or configure Netra. Follow
-the Teams setup guide first. Never put a client secret in this folder or package.
+Building the package does not create Azure resources or configure Netra AI. Follow
+the [Teams setup guide](../README.md) first. Never put a client secret in this folder or package.
 
 
 App version 0.2.0 enables `supportsFiles` for CSV delivery through the native Teams OneDrive consent flow. Rebuild and upload the updated ZIP when upgrading; the app ID and bot ID stay the same. No Graph file scopes are added.

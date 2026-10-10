@@ -1,19 +1,18 @@
-# Netra documentation
+# Netra AI documentation
 
-Netra answers administrator questions using a curated set of read-only Microsoft
+Netra AI answers administrator questions using a curated set of read-only Microsoft
 Graph operations and selected local snapshots. It runs locally for one commercial
 Entra tenant per deployment. The question library includes scenarios relevant to
 small, medium, and large tenants; it does not establish enterprise-scale capacity.
 
 | I want to… | Start here |
 | --- | --- |
-| Install and start Netra | [Installation and Entra setup](INSTALLATION.md) |
+| Install and start Netra AI | [Installation and Entra setup](INSTALLATION.md) |
 | Configure credentials and permissions | [Entra app registration](INSTALLATION.md#entra-app-registration) |
 | Choose and configure a model | [AI providers and models](AI_PROVIDERS.md) |
 | Upgrade an existing installation | [Upgrade guide](INSTALLATION.md#upgrading) |
-| See exactly what is synced | [Synced datasets and fields](DATA_SYNC.md#what-netra-syncs) |
+| See exactly what is synced | [Synced datasets and fields](DATA_SYNC.md#what-netra-ai-syncs) |
 | Refresh snapshots, schedule sync, or use the CLI | [Data sync and CLI](DATA_SYNC.md) |
-| Understand execution, storage, and cleanup | [Runtime and data](RUNTIME_AND_DATA.md) |
 | Run checks or contribute | [Development](DEVELOPMENT.md) |
 | Set up Teams personal chat | [Teams integration](../src/integrations/teams/README.md) |
 | Find questions to ask | [Administrator question library](QUESTION_LIBRARY.md) |
