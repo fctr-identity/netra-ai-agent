@@ -9,7 +9,7 @@
 
   <br>
 
-  <h1>Netra AI Agent for Microsoft Entra ID</h1>
+  <h1>Netra - AI Agent for Microsoft Entra ID</h1>
 
   <p>
     <a href="#quick-start-docker">Quick start</a> ·
@@ -35,13 +35,14 @@
 
 ---
 
-**Netra means “eye” in Sanskrit.** Netra is an open-source AI agent for Microsoft
-Entra ID (currently supporting read-only endpoints)—a complete workspace for
-exploring and understanding your directory.
+Named after the Sanskrit word for “eye,” **Netra** helps you see and understand
+your Microsoft Entra ID environment. It is an open-source AI agent (currently
+supporting read-only endpoints) that turns questions about your directory into
+answers you can explore, follow up on, and export.
 
-Netra is built on **Tako AI Agent**, originally developed for **Okta**. It adapts
-Tako's agent platform, conversational UI, and database-plus-API approach for
-Microsoft Entra ID and Microsoft Graph.
+Netra is built on the same agent harness as
+[**Tako AI Agent for Okta**](https://github.com/fctr-id/okta-ai-agent), adapted for
+Microsoft Entra ID with Microsoft Graph and optional SQLite snapshots.
 
 Ask questions in plain English and keep investigating in the same conversation.
 Run Netra locally with your preferred supported LLM provider, through the browser,
@@ -53,14 +54,12 @@ Administrator questions often cross users, groups, applications, and policies.
 Netra connects those records, processes the data, and presents answers in one
 application—with a web UI, CLI, tables, and exports included.
 
-| Capability | Practical advantage |
-| --- | --- |
-| **Bulk data outside the model context** | Code processes retrieved records while the model receives compact previews and focused results, saving context compared with sending entire intermediate datasets to the model. |
-| **Fast SQL plus live Graph access** | Optional SQLite snapshots answer repeat questions quickly; live APIs provide fresh or additional data. |
-| **Follow-ups on previous results** | Continue with “Now show their applications” or “Which of those users are disabled?” |
-| **Coordinated investigation** | Netra connects SQL, API queries, and analysis across the steps needed to answer a question. |
-| **Reusable workflows** | When enabled, compatible saved procedures can run again, with fresh orchestration as a fallback. |
-| **Local deployment and model choice** | Operate the complete application yourself and choose the inference provider. |
+- 📊 **More data, less model context.** Code processes the records; the model receives compact previews and focused results instead of entire intermediate datasets.
+- ⚡ **Fast SQL plus live Graph access.** Optional SQLite snapshots speed up repeat questions, while live APIs provide fresh or additional data.
+- 💬 **Keep the conversation going.** Follow up with “Now show their applications” or “Which of those users are disabled?”
+- 🔎 **Investigate across your directory.** Netra coordinates SQL, API queries, and analysis to answer questions that span multiple resources.
+- 🔁 **Reuse successful workflows.** When enabled, compatible saved procedures can run again, with fresh orchestration if reuse fails.
+- 🏠 **Run locally. Choose your model.** Self-host the complete application and use your preferred supported LLM provider.
 
 Netra is a POC for one commercial Entra tenant per deployment. Results depend on
 permissions, licensing, data freshness, and model quality. Large-tenant capacity
@@ -139,10 +138,29 @@ examples. AI can make mistakes; validate results before acting on them.
 
 ## AI providers
 
-Provider adapters support OpenAI, Azure OpenAI, Google, Vertex AI, Anthropic,
-Amazon Bedrock, and OpenAI-compatible endpoints. Reasoning and coding can use the
-same model or different models. Choose models that support structured tool calls;
-quality, latency, and cost vary by model.
+Netra supports OpenAI, Google AI Studio, Google Vertex AI, Anthropic, Azure OpenAI,
+AWS Bedrock, and OpenAI-compatible endpoints, including local models through Ollama.
+
+Set `AI_PROVIDER` and configure your provider's credentials and model IDs. Reasoning
+and coding can use the same model or different models. Choose models that support
+structured tool calls; answer quality, speed, and cost vary by model.
+
+### Models tested with Tako
+
+[Tako's AI provider guide](https://github.com/fctr-id/okta-ai-agent#ai-provider-support)
+lists these tested models for the shared agent harness:
+
+| Provider | Model |
+| --- | --- |
+| DeepSeek | DeepSeek V4.1 Flash |
+| Z.ai | GLM 5.3 |
+| Google | Gemini 3.8 Flash |
+| OpenAI | GPT-5.6 Terra |
+| Anthropic | Claude Haiku 4.5 |
+
+DeepSeek and Z.ai connect through `openai_compatible`. This list reflects Tako's
+testing; try your chosen model with representative Entra questions before relying
+on its results. Smaller, older, or untested models may give less reliable answers.
 
 See [installation](docs/INSTALLATION.md) and [`.env.example`](.env.example) for
 configuration. Prompts and selected directory context go to your configured model
@@ -183,5 +201,6 @@ out of reports. See the [development guide](docs/DEVELOPMENT.md) to contribute.
 
 ## License and attribution
 
-Netra builds on Fctr's Tako AI Agent. See [LICENSE](LICENSE) for the current terms
+Netra shares its agent harness with Fctr's [Tako AI Agent](https://github.com/fctr-id/okta-ai-agent).
+See [LICENSE](LICENSE) for the current terms
 and [third-party notices](THIRD_PARTY_NOTICES.md) for Microsoft metadata attribution.
