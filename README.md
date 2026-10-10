@@ -68,7 +68,7 @@ Compared with MCP tools that return raw records directly into model context,
 this approach reduces context usage as datasets grow. Netra packages it with a
 web UI, follow-ups, and exports in one application. Here's why that matters:
 
-- 📊 **Work with datasets beyond the model's context window.** Process records in code, explore retrieved results in tables, and export all saved result rows without asking the model to reproduce them.
+- 📊 **Fewer tokens. Lower AI costs.** Netra processes bulk data in code and sends compact previews to the model, reducing input-token costs compared with passing every retrieved record into context. Saved results remain available for tables and CSV exports.
 - ⚡ **Fast SQL plus live Graph access.** Optional SQLite snapshots speed up repeat questions, while live APIs provide fresh or additional data.
 - 💬 **Keep the conversation going.** Follow-ups build on previous results, so you can narrow a population or investigate its applications.
 - 🔎 **Investigate across your directory.** Netra coordinates SQL, API queries, and analysis for questions that span multiple resources.
