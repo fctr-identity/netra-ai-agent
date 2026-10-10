@@ -200,8 +200,9 @@ async def execute_generated_script(
         
         # Execute script
         logger.info(f"Executing script with {python_exe}")
-        from src.core.process_runner import run_process
-        proc = await run_process([python_exe, '-u', str(script_path.resolve())], cwd=project_root)
+        from src.core.process_runner import run_process, graph_execution_timeout
+        proc = await run_process([python_exe, '-u', str(script_path.resolve())], cwd=project_root,
+                                 timeout=graph_execution_timeout())
         stdout, stderr = proc.stdout, proc.stderr
         stdout_str = stdout.decode('utf-8', errors='replace')
         stderr_str = stderr.decode('utf-8', errors='replace')

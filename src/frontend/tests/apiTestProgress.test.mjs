@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { applyApiTestProgress, interruptApiTests } from '../src/composables/apiTestProgress.js'
+import { applyApiTestProgress, interruptApiTests, requestElapsed, requestStatus } from '../src/composables/apiTestProgress.js'
 
 test('out-of-order concurrent results attach to their test even after a new step', () => {
     const steps = [{ tools: [{ testId: 'a', requests: [] }] }, { tools: [{ testId: 'b', requests: [] }] }]
@@ -32,4 +32,19 @@ test('unrelated progress remains available to existing execution handler', () =>
     assert.equal(applyApiTestProgress([], undefined), false)
     assert.equal(applyApiTestProgress([], 'legacy message'), false)
     assert.equal(applyApiTestProgress([], { kind: 'api_test_request', test_id: 'missing' }), true)
+})
+
+test('retry and timeout events retain elapsed time and stop the waiting state', () => {
+    const steps = [{ tools: [{ testId: 'a', requests: [] }] }]
+    const event = { kind: 'api_test_request', test_id: 'a', request_id: 'r', operation: 'user.list' }
+    applyApiTestProgress(steps, { ...event, status: 'running', elapsed_ms: 0 }, 1000)
+    const request = steps[0].tools[0].requests[0]
+    assert.equal(requestElapsed(request, 22000), 21)
+    applyApiTestProgress(steps, { ...event, status: 'retry_wait', retry_after_seconds: 5 }, 22000)
+    assert.match(requestStatus(request, 23000), /4s remaining/)
+    applyApiTestProgress(steps, { kind: 'api_test_end', test_id: 'a', status: 'timed_out' }, 121000)
+    assert.equal(request.status, 'timed_out')
+    assert.equal(requestElapsed(request, 500000), 120)
+    applyApiTestProgress(steps, { ...event, status: 'running' }, 130000)
+    assert.equal(request.status, 'timed_out')
 })

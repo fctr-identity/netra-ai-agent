@@ -466,6 +466,14 @@ def create_api_toolset(deps: APIDiscoveryDeps) -> FunctionToolset:
         
         # Notify tool call start
         test_id = f"api-test-{uuid4().hex}"
+
+        async def finish_test(status):
+            if deps.progress_callback:
+                try:
+                    await deps.progress_callback({'details': {'kind': 'api_test_end', 'test_id': test_id, 'status': status}})
+                except Exception:
+                    pass
+
         await notify_tool_call("execute_test_query_api", description, test_id=test_id)
         
         logger.info(f"[{deps.correlation_id}] Executing API test #{deps.api_tests_executed} (global: {deps.global_tool_calls}/{deps.max_global_tool_calls}, api_tests: {deps.api_tests_executed}/10)")
@@ -477,6 +485,7 @@ def create_api_toolset(deps: APIDiscoveryDeps) -> FunctionToolset:
         validation_result = validate_generated_code(code)
         if not validation_result.is_valid:
             logger.warning(f"[{deps.correlation_id}] Code validation failed: {validation_result.violations}")
+            await finish_test("failed")
             # NOTE: Don't notify_step_end for tool-level failures - let LLM retry
             return ToolReturn(
                 return_value=f"❌ Security validation failed",
@@ -492,6 +501,16 @@ def create_api_toolset(deps: APIDiscoveryDeps) -> FunctionToolset:
             from src.core.process_runner import run_worker, WORKER_EVENT
 
             async def relay(line):
+                if line.startswith('__NETRA_HTTP__'):
+                    logger.info("Graph HTTP timing: %s", line[len('__NETRA_HTTP__'):])
+                    return
+                if line.startswith('__PROGRESS__'):
+                    if deps.progress_callback:
+                        try:
+                            await deps.progress_callback(json.loads(line[len('__PROGRESS__'):]))
+                        except Exception:
+                            pass
+                    return
                 if not line.startswith(WORKER_EVENT):
                     return
                 try:
@@ -508,6 +527,8 @@ def create_api_toolset(deps: APIDiscoveryDeps) -> FunctionToolset:
             result = await run_worker('api', {
                 'code': code, 'endpoints': deps.endpoints, 'test_id': test_id,
             }, cancellation_check=deps.cancellation_check, on_stderr=relay)
+
+            await finish_test('success')
 
             # IMPORTANT: Do NOT auto-save here
             # LLM will explicitly call save_artifact() tool when results are validated
@@ -543,6 +564,7 @@ def create_api_toolset(deps: APIDiscoveryDeps) -> FunctionToolset:
             )
             
         except Exception as e:
+            await finish_test('timed_out' if isinstance(e, TimeoutError) else 'failed')
             logger.info(
                 f"[{deps.correlation_id}] API test diagnostic: "
                 + json.dumps({"test_id": test_id, "test_number": deps.api_tests_executed,

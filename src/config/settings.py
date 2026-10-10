@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     ENTRA_USER_CUSTOM_ATTRIBUTES: str = ''
     GRAPH_CONCURRENT_LIMIT: int = Field(default=4, ge=1, le=20)
     GRAPH_MAX_PAGES: int = Field(default=1000, ge=1)
-    GRAPH_TIMEOUT_SECONDS: int = Field(default=120, ge=10, le=600)
+    GRAPH_TIMEOUT_SECONDS: int = Field(default=90, ge=10, le=600)
     SYNC_MFA_REGISTRATION: bool = True
     SYNC_DIRECTORY_ROLES: bool = False
     SYNC_CONDITIONAL_ACCESS: bool = False

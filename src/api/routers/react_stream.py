@@ -342,21 +342,26 @@ async def _execute_script(
         error_message="Invalid script path - potential path traversal",
     )
     
-    from src.core.process_runner import run_process
+    from src.core.process_runner import run_process, graph_execution_timeout
+    from src.core.progress_events import public_progress
     progress_events = asyncio.Queue(maxsize=64)
 
     async def on_stderr(line):
-        if line.startswith('__PROGRESS__'):
+        if line.startswith('__NETRA_HTTP__'):
+            logger.info('Graph HTTP timing: %s', line[len('__NETRA_HTTP__'):])
+        elif line.startswith('__PROGRESS__'):
             try:
                 data = json.loads(line[len('__PROGRESS__'):].strip())
                 if isinstance(data, dict):
-                    await progress_events.put({'type': 'STEP-PROGRESS', **data, 'timestamp': time.time()})
+                    event = public_progress(data.get('details'))
+                    if event:
+                        await progress_events.put(event)
             except json.JSONDecodeError:
                 pass
 
     execution_task = asyncio.create_task(run_process(
         [python_exe, '-u', str(script_path_obj)], cwd=project_root,
-        cancellation_check=check_cancelled, on_stderr=on_stderr,
+        timeout=graph_execution_timeout(), cancellation_check=check_cancelled, on_stderr=on_stderr,
     ))
     try:
         while not execution_task.done() or not progress_events.empty():
@@ -692,64 +697,12 @@ async def stream_react_updates(
             
             # Callback for orchestrator events
             async def event_callback(event_type: str, event_data: Dict[str, Any]):
-                """Convert orchestrator events to SSE format and queue them"""
-                if event_type == "step_start":
-                    text = event_data.get("text", "")
-                    
-                    # Filter out internal status messages that start with "WORD:" pattern
-                    # This catches: "STARTING:", "ROUTING:", "CLASSIFYING:", "ANALYZING:", etc.
-                    import re
-                    if re.match(r'^[🎯🔍⚡]*\s*[A-Z]+:', text):
-                        return  # Skip messages with prefix pattern
-                    
-                    sse_event = {
-                        "type": "STEP-START",
-                        "step": event_data.get("step", 0),
-                        "phase": event_data.get("phase"),
-                        "title": event_data.get("title", ""),
-                        "text": text,
-                        "tools": event_data.get("tools", []),  # Tool calls for frontend
-                        "timestamp": time.time()
-                    }
-                    await event_queue.put(sse_event)
-                
-                elif event_type == "step_end":
-                    sse_event = {
-                        "type": "STEP-END",
-                        "step": event_data.get("step", 0),
-                        "title": event_data.get("title", ""),
-                        "text": event_data.get("text", ""),
-                        "success": event_data.get("success", True),
-                        "timestamp": time.time()
-                    }
-                    await event_queue.put(sse_event)
-                
-                elif event_type == "tool_call":
-                    sse_event = {
-                        "type": "TOOL-CALL",
-                        "tool_name": event_data.get("tool_name", "unknown"),
-                        "test_id": event_data.get("test_id"),
-                        "description": event_data.get("description", ""),
-                        "timestamp": event_data.get("timestamp", time.time())
-                    }
-                    await event_queue.put(sse_event)
-                
-                elif event_type == "progress":
-                    message = event_data.get("message", "")
-                    
-                    # Filter out internal progress messages using same pattern as step_start
-                    import re
-                    if re.match(r'^[🎯🔍⚡]*\s*[A-Z]+:', message):
-                        return  # Skip messages with prefix pattern
-                    
-                    sse_event = {
-                        "type": "STEP-PROGRESS",
-                        "message": message,
-                        "details": event_data.get("details", ""),
-                        "timestamp": time.time()
-                    }
-                    await event_queue.put(sse_event)
-            
+                """Expose bounded public status, never free-form model/tool details."""
+                from src.core.progress_events import public_agent_event
+                event = public_agent_event(event_type, event_data)
+                if event:
+                    await event_queue.put(event)
+
             # Check if we should skip discovery and use pre-generated script
             if process.get("skip_discovery") and process.get("script_code"):
                 logger.info(f"[{process_id}] Skipping discovery phase, using pre-generated script")

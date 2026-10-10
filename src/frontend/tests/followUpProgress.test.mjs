@@ -41,6 +41,7 @@ test('follow-up phase events reach Activity without tools or internal reasoning'
         }
         // Tool calls stay beneath their phase instead of collecting at the bottom.
         const grouped = await renderToString(createSSRApp({ render: () => h(Activity, {
+            isComplete: true,
             steps: [
                 { phase: 'planning', tools: [] },
                 { phase: 'sql', tools: [{ name: 'get_sql_context' }] },

@@ -149,7 +149,9 @@ class ProcessLimitsTests(unittest.IsolatedAsyncioTestCase):
 
         async def completed(args, **kwargs):
             if kwargs.get('on_stderr'):
-                await kwargs['on_stderr']('__PROGRESS__' + json.dumps({'entity': 'sample'}))
+                await kwargs['on_stderr']('__PROGRESS__' + json.dumps({'details': {
+                    'kind': 'graph_request', 'request_id': 'fixture', 'operation': 'user.list',
+                    'status': 'running', 'data': 'PRIVATE_RECORD'}}))
             return ProcessResult(0, stdout.encode(), b'')
 
         script = ROOT / 'generated_scripts' / f'offline-process-{uuid4().hex}.py'
@@ -160,6 +162,7 @@ class ProcessLimitsTests(unittest.IsolatedAsyncioTestCase):
             events = [event async for event in _execute_script('offline', str(script), lambda: False)]
             result = await execute_script('print(1)', CHECKS / 'retrieval')
         self.assertEqual([event['type'] for event in events], ['STEP-PROGRESS', 'COMPLETE'])
+        self.assertNotIn('PRIVATE_RECORD', json.dumps(events))
         self.assertEqual(events[-1]['results'], payload['data'])
         self.assertEqual(result['results'], payload['data'])
         self.assertFalse(script.exists())

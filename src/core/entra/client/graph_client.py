@@ -4,9 +4,12 @@ import hashlib
 import json
 import re
 import sys
+import time
+from uuid import uuid4
 from functools import lru_cache
 from pathlib import Path
 from urllib.parse import urlencode, urlsplit, unquote
+from .request_trace import request_context, emit_progress, http_diagnostic
 
 GRAPH_BASE = 'https://graph.microsoft.com/v1.0'
 CATALOG_PATH = Path(__file__).resolve().parents[3] / 'data/schemas/graph_get_endpoints.json'
@@ -72,8 +75,26 @@ class EntraAPIClient:
             async def handle_async_request(self, request):
                 if request.method != 'GET':
                     raise ValueError('Graph data requests must be GET')
-                validate_graph_url(str(request.url))
-                return await super().handle_async_request(request)
+                path = validate_graph_url(str(request.url))
+                operation = operation_for(path)['id']
+                raw_attempt = request.headers.get('Retry-Attempt', '0')
+                attempt = int(raw_attempt) if raw_attempt.isdigit() else 0
+                context = request_context.get()
+                if attempt:
+                    emit_progress(context, 'retrying', attempt=attempt)
+                started = time.monotonic()
+                try:
+                    response = await super().handle_async_request(request)
+                except BaseException:
+                    http_diagnostic(operation, started, attempt, outcome='interrupted')
+                    raise
+                http_diagnostic(operation, started, attempt, status=response.status_code)
+                if response.status_code in (429, 503, 504):
+                    delay = response.headers.get('Retry-After', '')
+                    fields = {'retry_after_seconds': min(int(delay), 86400)} if delay.isdigit() else {}
+                    # Reports a transient response, not a promise that another retry will occur.
+                    emit_progress(context, 'retry_wait', **fields)
+                return response
 
         self._credential = ClientSecretCredential(self._settings.ENTRA_TENANT_ID, self._settings.ENTRA_CLIENT_ID,
             self._settings.ENTRA_CLIENT_SECRET, authority='login.microsoftonline.com', disable_instance_discovery=True)
@@ -101,6 +122,15 @@ class EntraAPIClient:
         return json.loads(raw)
 
     async def make_request(self, endpoint, method='GET', params=None, body=None, max_results=None, entity_label=None):
+        inherited_context = request_context.get()
+        context = inherited_context or {
+            'kind': 'graph_request', 'request_id': uuid4().hex,
+            'operation': 'unknown', 'started': time.monotonic(),
+        }
+        context_token = request_context.set(context)
+        def progress(status):
+            if inherited_context is None:
+                emit_progress(context, status)
         if isinstance(method, str):
             method = method.upper()
         fingerprint = hashlib.sha256(json.dumps([endpoint, method, params, max_results], sort_keys=True, default=str).encode()).hexdigest()
@@ -113,6 +143,8 @@ class EntraAPIClient:
             if not isinstance(endpoint, str) or not endpoint.startswith('/') or endpoint.startswith('//') or '?' in endpoint or '#' in endpoint:
                 raise ValueError('Use a catalog relative path and separate query parameters')
             operation = operation_for(endpoint)
+            context['operation'] = operation['id']
+            progress('running')
             params = dict(params or {})
             unknown = set(params) - set(operation['parameters']['optional'])
             if unknown:
@@ -173,9 +205,11 @@ class EntraAPIClient:
                     raise ValueError('Pagination safety limit reached before completion')
             result = {'status': 'success', 'data': data, 'complete': complete, 'count': len(data) if isinstance(data, list) else 1}
             record('success')
+            progress('empty' if data == [] or data == {} else 'success')
             return result
         except asyncio.CancelledError:
             record('error', category='unknown', message='Request cancelled')
+            progress('cancelled')
             raise
         except Exception as exc:
             from src.core.models.context_policy import sanitize_text
@@ -188,9 +222,12 @@ class EntraAPIClient:
                 message = message.replace(self._settings.ENTRA_CLIENT_SECRET, '[credential]')
             category = 'access' if status in (401, 403) else 'missing' if status == 404 else 'transient' if status == 429 or isinstance(exc, TimeoutError) or status and status >= 500 else 'request'
             record('error', category=category, http_status=status, error_code=code, message=message)
+            progress('timed_out' if isinstance(exc, TimeoutError) else 'failed')
             if entity_label:
                 self._entity_errors[entity_label] = self._entity_errors.get(entity_label, 0) + 1
             return {'status': 'error', 'error': message, 'error_code': code, 'http_status': status, 'complete': False}
+        finally:
+            request_context.reset(context_token)
 
     async def close_session(self):
         if self._http:

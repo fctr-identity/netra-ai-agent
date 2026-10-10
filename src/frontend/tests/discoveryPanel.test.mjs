@@ -41,6 +41,17 @@ test('activity hides internal reasoning and preserves actual endpoint statuses',
         assert.match(working, /Preparing your request/)
         assert.doesNotMatch(working, /PRIVATE_/)
 
+        const waiting = await renderToString(createSSRApp({ render: () => h(DiscoveryPanel, {
+            collapseRevision: 1,
+            steps: [{ phase: 'api', startedAt: Date.now() - 25000, tools: [{ testId: 't', requests: [
+                { id: 'r', label: 'Sign-in details', status: 'running', startedAt: Date.now() - 25000 },
+            ] }] }],
+        }) }))
+        assert.match(waiting, /aria-expanded="false"/)
+        assert.match(waiting, /Sign-in details · Waiting on Microsoft Graph/)
+        assert.match(waiting, /Taking longer than usual/)
+        assert.match(waiting, /Stop to cancel/)
+
         const descriptions = await renderToString(createSSRApp({ render: () => h(DiscoveryPanel, {
             steps: [{ tools: [
                 { name: 'get_sql_context', description: 'Inspect application fields' },

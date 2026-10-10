@@ -14,6 +14,7 @@
       </span>
       <span v-if="failedRequests" class="failed-count">{{ failedRequests }} failed {{ failedRequests === 1 ? 'attempt' : 'attempts' }}</span>
     </button>
+    <ActivityStatus v-if="isWorking" :label="activeLabel" :elapsed="activeElapsed" />
     <div v-show="isExpanded" :id="contentId" class="activity-body">
       <p v-if="!sections.length" class="activity-placeholder">
         {{ isWorking ? 'Preparing your request…' : 'No tool calls recorded.' }}
@@ -42,10 +43,13 @@
             <li v-for="request in entry.tool.requests" :key="request.id" :class="['request', request.status]">
               <span class="request-indicator" aria-hidden="true"></span>
               <span class="endpoint-name">{{ request.label || request.operation }}</span>
-              <span class="request-status">{{ requestStatusLabels[request.status] }}</span>
+              <span class="request-status">{{ requestStatus(request, now) }} · {{ requestElapsed(request, now) }}s</span>
             </li>
           </ul>
-          <span v-else-if="entry.tool.testId" class="request-placeholder">No endpoint calls recorded.</span>
+          <span v-else-if="entry.tool.testId" class="request-placeholder">{{
+            entry.tool.status === 'timed_out' ? 'Retrieval attempt timed out.' :
+            entry.tool.status === 'failed' ? 'Retrieval attempt failed before receiving data.' :
+            'No endpoint calls recorded.' }}</span>
         </li>
           </ol>
         </li>
@@ -57,7 +61,9 @@
 
 <script setup>
 import { computed, ref, useId, watch } from 'vue'
-import { requestStatusLabels } from '../../composables/apiTestProgress'
+import { activeRequestStates, requestElapsed, requestStatus } from '../../composables/apiTestProgress'
+import { useActivityClock } from '../../composables/useActivityClock'
+import ActivityStatus from './ActivityStatus.vue'
 
 const props = defineProps({
   steps: { type: Array, default: () => [] },
@@ -73,7 +79,9 @@ const props = defineProps({
 const contentId = `activity-${useId()}`
 const isExpanded = ref(props.collapseRevision === 0 && (Boolean(props.error) || (!props.isComplete && !props.shouldAutoCollapse)))
 watch(() => props.collapseRevision, () => { isExpanded.value = false })
-const isWorking = computed(() => !props.isComplete && !props.error)
+const isWorking = computed(() => !props.isComplete && !props.error && !props.executionStarted && !props.shouldAutoCollapse)
+const now = useActivityClock(isWorking)
+const mountedAt = Date.now()
 // Display only known phase labels and tool activity. Never render step
 // titles/text/reasoning, including those from older saved conversations.
 const phaseLabels = {
@@ -109,8 +117,20 @@ const sections = computed(() => props.steps.reduce((entries, step, stepIndex) =>
   return entries
 }, []))
 const tools = computed(() => sections.value.flatMap(section => section.tools))
+const activeRequest = computed(() => tools.value.flatMap(entry => entry.tool.requests || [])
+  .findLast(request => activeRequestStates.has(request.status)))
+const activeLabel = computed(() => {
+  const request = activeRequest.value
+  if (request) return `${request.label || 'Graph request'} · ${requestStatus(request, now.value)}`
+  const phase = props.steps.at(-1)?.phase
+  if (phase === 'api' && tools.value.at(-1)?.tool.finishedAt) return 'Reviewing retrieval results'
+  return phaseLabels[phase] || 'Preparing your request…'
+})
+const activeElapsed = computed(() => activeRequest.value
+  ? requestElapsed(activeRequest.value, now.value)
+  : Math.max(0, Math.floor((now.value - (props.steps.at(-1)?.startedAt || mountedAt)) / 1000)))
 const failedRequests = computed(() => tools.value.reduce((count, entry) =>
-  count + (entry.tool.requests || []).filter(request => request.status === 'failed').length, 0,
+  count + (entry.tool.requests || []).filter(request => ['failed', 'timed_out'].includes(request.status)).length, 0,
 ))
 watch(() => props.isComplete || props.shouldAutoCollapse, (finished) => {
   if (finished) isExpanded.value = false

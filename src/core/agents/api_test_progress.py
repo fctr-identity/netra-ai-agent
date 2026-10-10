@@ -5,6 +5,7 @@ import json
 import re
 import time
 from urllib.parse import urlsplit
+from src.core.entra.client.request_trace import request_context
 
 
 def response_diagnostics(response):
@@ -68,13 +69,14 @@ class DiscoveryTestClient:
         # Never send raw URLs, IDs, query strings, or error payloads to the panel.
         return "Uncatalogued endpoint"
 
-    async def _emit(self, request_id, operation, status):
+    async def _emit(self, request_id, operation, status, started):
         if self._progress_callback:
             try:
                 await self._progress_callback({"details": {
                     "kind": "api_test_request", "test_id": self._test_id,
                     "request_id": request_id, "operation": operation, "status": status,
                     "label": self._operation_labels.get(operation, "Other API request"),
+                    "elapsed_ms": round((time.monotonic() - started) * 1000),
                 }})
             except Exception:
                 # A disconnected UI must not change the request result.
@@ -100,23 +102,27 @@ class DiscoveryTestClient:
         self._request_count += 1
         request_id = f"{self._test_id}-request-{self._request_count}"
         started = time.monotonic()
+        token = request_context.set({'kind': 'api_test_request', 'test_id': self._test_id,
+                                     'request_id': request_id, 'operation': operation, 'started': started})
         try:
-            await self._emit(request_id, operation, "running")
+            await self._emit(request_id, operation, "running", started)
             response = await self._client.make_request(*args, **kwargs)
         except asyncio.CancelledError:
             self._diagnose(request_id, operation, "cancelled", started)
-            await self._emit(request_id, operation, "cancelled")
+            await self._emit(request_id, operation, "cancelled", started)
             raise
         except Exception:
             self._diagnose(request_id, operation, "exception", started)
-            await self._emit(request_id, operation, "failed")
+            await self._emit(request_id, operation, "failed", started)
             raise
+        finally:
+            request_context.reset(token)
         status = "unknown"
         if isinstance(response, dict):
             if response.get("status") == "success":
                 status = "empty" if response.get("data") in (None, [], {}) else "success"
             elif response.get("status") == "error":
-                status = "failed"
+                status = "timed_out" if response.get('error_code') == 'TimeoutError' else "failed"
         self._diagnose(request_id, operation, status, started, response)
-        await self._emit(request_id, operation, status)
+        await self._emit(request_id, operation, status, started)
         return response

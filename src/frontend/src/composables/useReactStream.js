@@ -7,7 +7,7 @@
 
 import { ref, watch } from 'vue'
 import { useAuth } from './useAuth'
-import { applyApiTestProgress, interruptApiTests } from './apiTestProgress'
+import { applyApiTestProgress, interruptApiTests, applyRequestProgress, interruptRequests } from './apiTestProgress'
 import { isClarification, clarificationResult } from './turnFeedback'
 import { getBrowserTimezone } from './userTimezone'
 
@@ -269,7 +269,7 @@ export function useReactStream() {
                         break
                 }
             } catch (err) {
-                console.error('[useReactStream] Error parsing SSE message:', err, event.data)
+                console.error('[useReactStream] Invalid stream event:', err)
             }
         }
         
@@ -299,7 +299,6 @@ export function useReactStream() {
      */
     const handleStepStart = (data) => {
         console.log('[useReactStream] handleStepStart called')
-        console.log('[useReactStream] STEP-START data:', data)
         
         currentStep.value = data.title
         
@@ -355,6 +354,7 @@ export function useReactStream() {
             discoverySteps.value.push({
                 id: `step-${discoverySteps.value.length + 1}`,
                 phase: data.phase,
+                startedAt: Date.now(),
                 step: data.step || discoverySteps.value.length + 1,
                 title: cleanText || data.title, // Use cleaned text as title
                 reasoning: cleanText || data.reasoning || null, // Use cleaned text as reasoning
@@ -372,7 +372,7 @@ export function useReactStream() {
      */
     const handleStepEnd = (data) => {
         // Check if this is a validation failure
-        const isFailure = data.title && (data.title.toLowerCase().includes('failed') || data.title.toLowerCase().includes('error'))
+        const isFailure = data.success === false || data.title && (data.title.toLowerCase().includes('failed') || data.title.toLowerCase().includes('error'))
         
         // Update validation if complete or failed
         if (validationStep.value && validationStep.value.status === 'in-progress') {
@@ -407,6 +407,7 @@ export function useReactStream() {
             lastStep.tools.push({
                 name: data.tool_name || 'unknown',
                 testId: data.test_id || null,
+                startedAt: Date.now(),
                 requests: [],
                 description: data.description || '',
                 timestamp: new Date((data.timestamp || Date.now()) * 1000).toLocaleTimeString()
@@ -419,57 +420,13 @@ export function useReactStream() {
      */
     const handleStepProgress = (data) => {
         if (applyApiTestProgress(discoverySteps.value, data.details)) return
-        // Check if this is a rate limit event
-        if (data.progress_type === 'rate_limit' && data.wait_seconds) {
-            rateLimitWarning.value = data.wait_seconds
-            executionMessage.value = data.message || `Rate limit - waiting ${data.wait_seconds}s`
-            
-            // Start countdown (client-side only, no backend load)
-            const countdown = setInterval(() => {
-                rateLimitWarning.value--
-                if (rateLimitWarning.value <= 0) {
-                    clearInterval(countdown)
-                    rateLimitWarning.value = 0
-                }
-            }, 1000)
-            
-            return
+        if (data.details?.kind === 'graph_request') {
+            applyRequestProgress(subprocessProgress.value, data.details)
+            executionMessage.value = 'Retrieving the requested data'
         }
-        
-        // Ignore rate_limit_wait spam events - we already have the countdown running
-        if (data.progress_type === 'rate_limit_wait') {
-            return
-        }
-        
-        // Regular progress event
-        currentStep.value = `${data.entity}: ${data.current}/${data.total}`
-        executionMessage.value = `Processing ${data.entity}...`
-        
-        // Calculate progress percentage
-        if (data.total > 0) {
-            executionProgress.value = Math.round((data.current / data.total) * 100)
-        }
-        
-        // Track subprocess progress
-        const existing = subprocessProgress.value.find(p => p.label === data.entity)
-        if (existing) {
-            existing.current = data.current
-            existing.total = data.total
-            existing.percent = data.total > 0 ? Math.round((data.current / data.total) * 100) : null
-            existing.message = data.message || null
-            existing.success = data.status === 'completed_max_reached' || data.status === 'completed'
-        } else {
-            subprocessProgress.value.push({
-                label: data.entity,
-                current: data.current,
-                total: data.total,
-                percent: data.total > 0 ? Math.round((data.current / data.total) * 100) : null,
-                message: data.message || null,
-                success: false
-            })
-        }
+        // Unknown/internal progress payloads are intentionally not displayed.
     }
-    
+
     /**
      * Handle STEP-TOKENS event
      */
@@ -738,6 +695,10 @@ export function useReactStream() {
                 console.warn('[useReactStream] Cancel request failed with status:', response.status)
             }
             
+            if (response.ok) {
+                interruptApiTests(discoverySteps.value, 'cancelled')
+                interruptRequests(subprocessProgress.value, 'cancelled')
+            }
             closeStream()
             isLoading.value = false
             isProcessing.value = false
@@ -758,6 +719,7 @@ export function useReactStream() {
      */
     const closeStream = () => {
         interruptApiTests(discoverySteps.value)
+        interruptRequests(subprocessProgress.value)
         if (eventSource) {
             console.log('[useReactStream] Closing EventSource (readyState:', eventSource.readyState, ')')
             eventSource.close()

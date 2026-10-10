@@ -15,6 +15,11 @@ WORKER_RESULT = '__NETRA_WORKER_RESULT__'
 WORKER_EVENT = '__NETRA_WORKER_EVENT__'
 
 
+def graph_execution_timeout():
+    from src.config.settings import settings
+    return max(EXECUTION_TIMEOUT, settings.GRAPH_TIMEOUT_SECONDS + 30)
+
+
 @dataclass
 class ProcessResult:
     returncode: int
@@ -108,8 +113,14 @@ async def run_process(args, *, cwd, timeout=EXECUTION_TIMEOUT, cancellation_chec
             await asyncio.gather(completion, return_exceptions=True)
 
 
-async def run_worker(mode, payload, *, timeout=DISCOVERY_TIMEOUT, cancellation_check=None,
+async def run_worker(mode, payload, *, timeout=None, cancellation_check=None,
                      on_stderr=None):
+    if timeout is None:
+        if mode == 'api':
+            # Leave time for startup and error reporting after a Graph deadline.
+            timeout = graph_execution_timeout()
+        else:
+            timeout = DISCOVERY_TIMEOUT
     result = await run_process(
         [sys.executable, '-u', '-m', 'src.core.execution_worker', mode],
         cwd=Path(__file__).resolve().parents[2], timeout=timeout,

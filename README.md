@@ -222,13 +222,27 @@ Python still runs with the application's operating-system privileges.
 
 Generated API discovery, SQL discovery, and saved-result analysis run in local
 child processes. The shared supervisor also covers final UI, CLI, Teams, and
-saved-procedure retrieval scripts. It enforces 120-second final execution,
-60-second API/analysis execution, and 15-second SQL discovery deadlines, including
-worker startup. Captured output is capped at 8 MiB stdout and 1 MiB stderr;
+saved-procedure retrieval scripts. Graph operations default to 90 seconds.
+API discovery and final retrieval execution allow at least 120 seconds, or the
+configured `GRAPH_TIMEOUT_SECONDS` plus 30 seconds when that is longer. These are
+whole-script deadlines, including worker startup; a script with several slow
+operations can still reach its limit. Analysis retains a 60-second deadline and
+SQL discovery a 15-second deadline. Captured output is capped at 8 MiB stdout and 1 MiB stderr;
 oversized output fails rather than returning truncated success. Cancellation is
 checked independently of progress messages, and children are killed and reaped
 on failure/cancellation. These are time/output bounds, not memory/CPU quotas or
 filesystem/credential isolation.
+
+While a query runs, the activity panel shows its current phase or Graph operation,
+elapsed time, and a slow-operation notice after 20 seconds. Completed requests and
+retry/timeout states remain in expandable activity; Stop cancels the running work.
+Progress events carry only fixed phase/tool labels, catalog operation labels,
+correlation IDs, status, elapsed time, and optional retry timing. Model reasoning,
+tenant records, raw URLs, headers, and error bodies are excluded from this feed.
+The existing result, optional generated-script, and token-usage events serve their
+separate UI views. Per-attempt HTTP timing/status diagnostics stay in server logs;
+they omit request URLs, credentials, and response bodies. Timers update locally
+without per-second server events.
 
 Assignments are not effective access. MFA registration is not successful MFA use.
 Direct and transitive memberships differ, and nested groups do not confer

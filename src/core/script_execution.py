@@ -43,7 +43,7 @@ def parse_output(stdout: str) -> dict:
     return {**result, "display_type": "table", "results": rows, "count": len(rows)}
 
 
-async def execute_script(code: str, directory: Path, *, timeout=120, cancellation_check=None) -> dict:
+async def execute_script(code: str, directory: Path, *, timeout=None, cancellation_check=None) -> dict:
     from src.data.schemas.runtime_storage import prepare_runtime_script_code
     from src.utils.security_config import validate_generated_code
 
@@ -60,9 +60,9 @@ async def execute_script(code: str, directory: Path, *, timeout=120, cancellatio
             raise asyncio.CancelledError()
         shutil.copy2(project_root / "src/core/entra/client/base_graph_client.py", helper)
         script.write_text(prepare_runtime_script_code(code), encoding="utf-8")
-        from src.core.process_runner import run_process
+        from src.core.process_runner import run_process, graph_execution_timeout
         proc = await run_process([sys.executable, '-u', str(script.resolve())],
-                                 cwd=project_root, timeout=timeout,
+                                 cwd=project_root, timeout=graph_execution_timeout() if timeout is None else timeout,
                                  cancellation_check=cancellation_check)
         stdout, stderr = proc.stdout, proc.stderr
         from src.core.retrieval_outcomes import check_retrieval_outcomes

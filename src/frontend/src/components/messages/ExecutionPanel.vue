@@ -26,6 +26,7 @@
         <span v-if="executionError" class="status-badge error">Failed</span>
       </div>
     </button>
+    <ActivityStatus v-if="isRunning" :label="activeLabel" :elapsed="activeElapsed" />
 
     <!-- Content -->
     <transition name="slide">
@@ -114,11 +115,13 @@
           <div v-if="hasActualSubprocessProgress" class="subprocess-section">
             <div v-for="(progress, index) in subprocessProgress" :key="index" class="subprocess-row">
               <span class="subprocess-indicator">
-                <span v-if="progress.success" class="indicator-dot success small"></span>
+                <span v-if="['success', 'empty'].includes(progress.status) || progress.success" class="indicator-dot success small"></span>
+                <span v-else-if="progress.status && !activeRequestStates.has(progress.status)" class="indicator-dot small"></span>
                 <span v-else class="indicator-spinner small"></span>
               </span>
               <span class="subprocess-label">{{ progress.label }}</span>
-              <span v-if="progress.message" class="subprocess-note">{{ progress.message }}</span>
+              <span v-if="progress.id" class="subprocess-note">{{ requestStatus(progress, now) }} · {{ requestElapsed(progress, now) }}s</span>
+              <span v-else-if="progress.message" class="subprocess-note">{{ progress.message }}</span>
             </div>
           </div>
 
@@ -139,6 +142,9 @@
 
 <script setup>
 import { ref, computed, watch, useId } from 'vue'
+import { activeRequestStates, requestElapsed, requestStatus } from '../../composables/apiTestProgress'
+import { useActivityClock } from '../../composables/useActivityClock'
+import ActivityStatus from './ActivityStatus.vue'
 
 const props = defineProps({
   validationStep: { type: Object, default: null },
@@ -159,6 +165,17 @@ const props = defineProps({
 })
 
 const contentId = `execution-${useId()}`
+const isRunning = computed(() => props.isExecuting && !props.isComplete && !props.executionError)
+const now = useActivityClock(isRunning)
+const startedAt = ref(Date.now())
+watch(isRunning, running => { if (running) startedAt.value = Date.now() })
+const activeRequest = computed(() => props.subprocessProgress.findLast(request => activeRequestStates.has(request.status)))
+const activeLabel = computed(() => activeRequest.value
+  ? `${activeRequest.value.label || 'Graph request'} · ${requestStatus(activeRequest.value, now.value)}`
+  : 'Preparing your results')
+const activeElapsed = computed(() => activeRequest.value
+  ? requestElapsed(activeRequest.value, now.value)
+  : Math.max(0, Math.floor((now.value - startedAt.value) / 1000)))
 const isExpanded = ref(props.collapseRevision === 0 && (Boolean(props.executionError) || (!props.isComplete && !props.shouldAutoCollapse)))
 const isScriptExpanded = ref(false)
 watch(() => props.collapseRevision, () => {
