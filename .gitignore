@@ -1,0 +1,53 @@
+# Local Python and frontend environments
+.venv/
+venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*.egg-info/
+node_modules/
+.vite/
+dist/
+build/
+
+# Local credentials and configuration (publish only the template)
+.env
+.env.*
+!.env.example
+certs/
+*.pem
+*.key
+
+# Local data, conversations and generated results
+sqlite_db/
+chat_sessions/
+logs/
+results/
+generated_scripts/
+src/data/runtime/
+src/data/results/
+src/core/orchestration/results/
+*.db
+*.db-wal
+*.db-shm
+*.log
+
+# Build output and developer tooling
+src/api/static/
+src/frontend/typed-router.d.ts
+src/frontend/components.d.ts
+.pytest_cache/
+.coverage
+htmlcov/
+.vscode/
+.idea/
+.DS_Store
+*.tmp
+
+# Customer-specific Teams packages
+src/integrations/teams/app_package/output/
+
+# Private planning, reference inputs, and archived copied files
+/DO_NOT_SHARE/
+/do_not_share/

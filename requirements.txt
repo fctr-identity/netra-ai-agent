@@ -1,0 +1,46 @@
+# Core dependencies
+pydantic~=2.13.5
+pydantic-ai-slim[openai,anthropic,google,bedrock,retries]>=2.46.0,<3
+python-dotenv~=1.2.3
+msgraph-sdk>=1.64.0,<2
+azure-identity>=1.26.0,<2
+sqlalchemy~=2.0.54
+aiosqlite~=0.22.1
+pydantic-settings~=2.15.0
+pytz==2026.3.post1
+tzdata==2026.4
+fastapi~=0.141.1
+uvicorn~=0.53.0
+sse-starlette==3.4.11
+argon2-cffi~=25.1.0
+python-jose[cryptography]~=3.5.0
+python-multipart~=0.0.32
+#html-sanitizer~=2.6.0
+#dateparser~=1.2.2
+#polars~=1.31.0
+#polars-lts-cpu~=1.32.2
+authlib~=1.8.0
+
+# Retain the provider SDK major versions validated with Pydantic AI 2.x.
+openai>=3.8.0,<4
+anthropic>=1.3.0,<2
+google-genai>=2.18.0,<3
+httpx2>=2.13.0,<3
+
+# Security floors for shared runtime/transitive dependencies.
+starlette>=1.6.0,<2
+aiohttp>=3.14.3,<4
+anyio>=4.15.1,<5
+cryptography>=50.0.1,<51
+joserfc>=1.7.5,<2
+jwcrypto>=1.6.1,<2
+PyJWT>=2.14.0,<3
+pyasn1>=0.6.4,<0.7
+requests>=2.34.2,<3
+urllib3>=2.8.0,<3
+# Includes the DER fix; the upstream Minerva timing advisory remains unresolved.
+ecdsa>=0.19.2,<0.20
+click>=8.5.0,<9
+# Ships a wheel and no longer needs the legacy setuptools build workaround.
+flatdict>=4.1.0,<5
+

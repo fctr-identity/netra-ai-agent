@@ -1,0 +1,73 @@
+import { test } from 'node:test'
+import assert from 'node:assert/strict'
+import { applyApiTestProgress, applyModelProgress, interruptApiTests, requestElapsed, requestStatus } from '../src/composables/apiTestProgress.js'
+
+test('out-of-order concurrent results attach to their test even after a new step', () => {
+    const steps = [{ tools: [{ testId: 'a', requests: [] }] }, { tools: [{ testId: 'b', requests: [] }] }]
+    const emit = (test, id, status) => applyApiTestProgress(steps, {
+        kind: 'api_test_request', test_id: test, request_id: id, operation: 'user.list',
+        label: 'List directory users', status,
+    })
+    emit('a', '1', 'running')
+    emit('a', '2', 'running')
+    emit('b', '3', 'running')
+    emit('a', '2', 'empty')
+    emit('b', '3', 'success')
+    emit('a', '1', 'failed')
+    emit('a', '1', 'running') // stale event cannot overwrite failure
+    assert.deepEqual(steps[0].tools[0].requests.map(r => r.status), ['failed', 'empty'])
+    assert.equal(steps[1].tools[0].requests[0].status, 'success')
+    const saved = JSON.parse(JSON.stringify(steps))
+    assert.equal(saved[0].tools[0].requests[0].label, 'List directory users')
+    assert.equal(saved[0].tools[0].requests[0].operation, 'user.list')
+})
+
+test('stream closure marks only unresolved calls unconfirmed', () => {
+    const steps = [{ tools: [{ requests: [{ status: 'running' }, { status: 'failed' }, { status: 'success' }] }] }]
+    interruptApiTests(steps)
+    assert.deepEqual(steps[0].tools[0].requests.map(r => r.status), ['unknown', 'failed', 'success'])
+})
+
+test('unrelated progress remains available to existing execution handler', () => {
+    assert.equal(applyApiTestProgress([], undefined), false)
+    assert.equal(applyApiTestProgress([], 'legacy message'), false)
+    assert.equal(applyApiTestProgress([], { kind: 'api_test_request', test_id: 'missing' }), true)
+})
+
+test('retry and timeout events retain elapsed time and stop the waiting state', () => {
+    const steps = [{ tools: [{ testId: 'a', requests: [] }] }]
+    const event = { kind: 'api_test_request', test_id: 'a', request_id: 'r', operation: 'user.list' }
+    applyApiTestProgress(steps, { ...event, status: 'running', elapsed_ms: 0 }, 1000)
+    const request = steps[0].tools[0].requests[0]
+    assert.equal(requestElapsed(request, 22000), 21)
+    applyApiTestProgress(steps, { ...event, status: 'retry_wait', retry_after_seconds: 5 }, 22000)
+    assert.match(requestStatus(request, 23000), /4s remaining/)
+    applyApiTestProgress(steps, { kind: 'api_test_end', test_id: 'a', status: 'timed_out' }, 121000)
+    assert.equal(request.status, 'timed_out')
+    assert.equal(requestElapsed(request, 500000), 120)
+    applyApiTestProgress(steps, { ...event, status: 'running' }, 130000)
+    assert.equal(request.status, 'timed_out')
+})
+
+test('model rate limits stay with their phase and cancellation clears countdown', () => {
+    const steps = [{ phase: 'planning', tools: [] }]
+    const event = { kind: 'model_request', request_id: 'model-1', reason: 'rate_limit' }
+    applyModelProgress(steps, { ...event, status: 'retry_wait', retry_after_seconds: 8 }, 1000)
+    const request = steps[0].modelRequests[0]
+    assert.match(requestStatus(request, 2000), /AI provider rate limited.*7s remaining/)
+    steps.push({ phase: 'api', tools: [] })
+    applyModelProgress(steps, { ...event, status: 'retrying' }, 9000)
+    assert.equal(requestStatus(request, 9000), 'Retrying AI provider request')
+    assert.equal(steps[1].modelRequests, undefined)
+    interruptApiTests(steps, 'cancelled')
+    assert.equal(requestStatus(request, 10000), 'Cancelled')
+    applyModelProgress(steps, { ...event, status: 'retry_wait', retry_after_seconds: 20 }, 11000)
+    assert.equal(request.status, 'cancelled')
+})
+
+test('missing retry hints never invent a countdown or reset time', () => {
+    assert.equal(requestStatus({ kind: 'model_request', status: 'retry_wait', reason: 'rate_limit' }, 0),
+        'AI provider rate limited · waiting for retry')
+    assert.match(requestStatus({ status: 'retry_wait', reason: 'rate_limit' }, 0), /Microsoft Graph rate limited/)
+    assert.equal(requestStatus({ status: 'retry_wait', reason: 'temporary_error' }, 0), 'Graph returned a temporary error')
+})

@@ -1,0 +1,326 @@
+{
+  "revision": "15780e98e1082517bc7a39a6b75b356a085326d9",
+  "reviewed": "2026-10-09",
+  "source": "https://github.com/microsoftgraph/msgraph-metadata/blob/15780e98e1082517bc7a39a6b75b356a085326d9/openapi/v1.0/openapi.yaml",
+  "license": "MIT; see THIRD_PARTY_NOTICES.md",
+  "operations": [
+    {
+      "operation": "user.list",
+      "upstream_path": "/users",
+      "operation_id": "users.user.ListUser",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/user-list?view=graph-rest-1.0"
+    },
+    {
+      "operation": "user.get",
+      "upstream_path": "/users/{user-id}",
+      "operation_id": "users.user.GetUser",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/user-get?view=graph-rest-1.0"
+    },
+    {
+      "operation": "group.list",
+      "upstream_path": "/groups",
+      "operation_id": "groups.group.ListGroup",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/group-list?view=graph-rest-1.0"
+    },
+    {
+      "operation": "group.get",
+      "upstream_path": "/groups/{group-id}",
+      "operation_id": "groups.group.GetGroup",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/group-get?view=graph-rest-1.0"
+    },
+    {
+      "operation": "service_principal.list",
+      "upstream_path": "/servicePrincipals",
+      "operation_id": "servicePrincipals.servicePrincipal.ListServicePrincipal",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/serviceprincipal-list?view=graph-rest-1.0"
+    },
+    {
+      "operation": "service_principal.get",
+      "upstream_path": "/servicePrincipals/{servicePrincipal-id}",
+      "operation_id": "servicePrincipals.servicePrincipal.GetServicePrincipal",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/serviceprincipal-get?view=graph-rest-1.0"
+    },
+    {
+      "operation": "application.list",
+      "upstream_path": "/applications",
+      "operation_id": "applications.application.ListApplication",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/application-list?view=graph-rest-1.0"
+    },
+    {
+      "operation": "application.get",
+      "upstream_path": "/applications/{application-id}",
+      "operation_id": "applications.application.GetApplication",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/application-get?view=graph-rest-1.0"
+    },
+    {
+      "operation": "app_role_assignment.list",
+      "upstream_path": "/servicePrincipals/{servicePrincipal-id}/appRoleAssignedTo",
+      "operation_id": "servicePrincipals.ListAppRoleAssignedTo",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/serviceprincipal-list-approleassignedto?view=graph-rest-1.0"
+    },
+    {
+      "operation": "mfa_registration.list",
+      "upstream_path": "/reports/authenticationMethods/userRegistrationDetails",
+      "operation_id": "reports.authenticationMethods.ListUserRegistrationDetails",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/authenticationmethodsroot-list-userregistrationdetails?view=graph-rest-1.0"
+    },
+    {
+      "operation": "directory_role.list",
+      "upstream_path": "/roleManagement/directory/roleDefinitions",
+      "operation_id": "roleManagement.directory.ListRoleDefinitions",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/rbacapplication-list-roledefinitions?view=graph-rest-1.0"
+    },
+    {
+      "operation": "directory_role.get",
+      "upstream_path": "/roleManagement/directory/roleDefinitions/{unifiedRoleDefinition-id}",
+      "operation_id": "roleManagement.directory.GetRoleDefinitions",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/unifiedroledefinition-get?view=graph-rest-1.0"
+    },
+    {
+      "operation": "role_assignment.list",
+      "upstream_path": "/roleManagement/directory/roleAssignments",
+      "operation_id": "roleManagement.directory.ListRoleAssignments",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/rbacapplication-list-roleassignments?view=graph-rest-1.0"
+    },
+    {
+      "operation": "conditional_access.list",
+      "upstream_path": "/identity/conditionalAccess/policies",
+      "operation_id": "identity.conditionalAccess.ListPolicies",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/conditionalaccessroot-list-policies?view=graph-rest-1.0"
+    },
+    {
+      "operation": "conditional_access.get",
+      "upstream_path": "/identity/conditionalAccess/policies/{conditionalAccessPolicy-id}",
+      "operation_id": "identity.conditionalAccess.GetPolicies",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/conditionalaccesspolicy-get?view=graph-rest-1.0"
+    },
+    {
+      "operation": "sign_in.list",
+      "upstream_path": "/auditLogs/signIns",
+      "operation_id": "auditLogs.ListSignIns",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/signIn-list?view=graph-rest-1.0"
+    },
+    {
+      "operation": "sign_in.get",
+      "upstream_path": "/auditLogs/signIns/{signIn-id}",
+      "operation_id": "auditLogs.GetSignIns",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/signin-get?view=graph-rest-1.0"
+    },
+    {
+      "operation": "directory_audit.list",
+      "upstream_path": "/auditLogs/directoryAudits",
+      "operation_id": "auditLogs.ListDirectoryAudits",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/directoryaudit-list?view=graph-rest-1.0"
+    },
+    {
+      "operation": "directory_audit.get",
+      "upstream_path": "/auditLogs/directoryAudits/{directoryAudit-id}",
+      "operation_id": "auditLogs.GetDirectoryAudits",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/directoryaudit-get?view=graph-rest-1.0"
+    },
+    {
+      "operation": "device.list",
+      "upstream_path": "/devices",
+      "operation_id": "devices.device.ListDevice",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/device-list?view=graph-rest-1.0"
+    },
+    {
+      "operation": "device.get",
+      "upstream_path": "/devices/{device-id}",
+      "operation_id": "devices.device.GetDevice",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/device-get?view=graph-rest-1.0"
+    },
+    {
+      "operation": "user.list_direct_reports",
+      "upstream_path": "/users/{user-id}/directReports",
+      "operation_id": "users.ListDirectReports",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/user-list-directreports?view=graph-rest-1.0"
+    },
+    {
+      "operation": "user.list_app_role_assignments",
+      "upstream_path": "/users/{user-id}/appRoleAssignments",
+      "operation_id": "users.ListAppRoleAssignments",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/user-list-approleassignments?view=graph-rest-1.0"
+    },
+    {
+      "operation": "user.list_authentication_methods",
+      "upstream_path": "/users/{user-id}/authentication/methods",
+      "operation_id": "users.authentication.ListMethods",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/authentication-list-methods?view=graph-rest-1.0"
+    },
+    {
+      "operation": "group.list_owners",
+      "upstream_path": "/groups/{group-id}/owners",
+      "operation_id": "groups.ListOwners",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/group-list-owners?view=graph-rest-1.0"
+    },
+    {
+      "operation": "group.list_parent_groups",
+      "upstream_path": "/groups/{group-id}/memberOf",
+      "operation_id": "groups.ListMemberOf",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/group-list-memberof?view=graph-rest-1.0"
+    },
+    {
+      "operation": "group.list_transitive_parent_groups",
+      "upstream_path": "/groups/{group-id}/transitiveMemberOf",
+      "operation_id": "groups.ListTransitiveMemberOf",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/group-list-transitivememberof?view=graph-rest-1.0"
+    },
+    {
+      "operation": "group.list_app_role_assignments",
+      "upstream_path": "/groups/{group-id}/appRoleAssignments",
+      "operation_id": "groups.ListAppRoleAssignments",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/group-list-approleassignments?view=graph-rest-1.0"
+    },
+    {
+      "operation": "device.list_registered_owners",
+      "upstream_path": "/devices/{device-id}/registeredOwners",
+      "operation_id": "devices.ListRegisteredOwners",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/device-list-registeredowners?view=graph-rest-1.0"
+    },
+    {
+      "operation": "device.list_registered_users",
+      "upstream_path": "/devices/{device-id}/registeredUsers",
+      "operation_id": "devices.ListRegisteredUsers",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/device-list-registeredusers?view=graph-rest-1.0"
+    },
+    {
+      "operation": "application.list_owners",
+      "upstream_path": "/applications/{application-id}/owners",
+      "operation_id": "applications.ListOwners",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/application-list-owners?view=graph-rest-1.0"
+    },
+    {
+      "operation": "service_principal.list_owners",
+      "upstream_path": "/servicePrincipals/{servicePrincipal-id}/owners",
+      "operation_id": "servicePrincipals.ListOwners",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/serviceprincipal-list-owners?view=graph-rest-1.0"
+    },
+    {
+      "operation": "service_principal.list_app_role_assignments",
+      "upstream_path": "/servicePrincipals/{servicePrincipal-id}/appRoleAssignments",
+      "operation_id": "servicePrincipals.ListAppRoleAssignments",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/serviceprincipal-list-approleassignments?view=graph-rest-1.0"
+    },
+    {
+      "operation": "delegated_grant.list",
+      "upstream_path": "/oauth2PermissionGrants",
+      "operation_id": "oauth2PermissionGrants.oAuth2PermissionGrant.ListOAuth2PermissionGrant",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/oauth2permissiongrant-list?view=graph-rest-1.0"
+    },
+    {
+      "operation": "named_location.list",
+      "upstream_path": "/identity/conditionalAccess/namedLocations",
+      "operation_id": "identity.conditionalAccess.ListNamedLocations",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/conditionalaccessroot-list-namedlocations?view=graph-rest-1.0"
+    },
+    {
+      "operation": "named_location.get",
+      "upstream_path": "/identity/conditionalAccess/namedLocations/{namedLocation-id}",
+      "operation_id": "identity.conditionalAccess.GetNamedLocations",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/namedlocation-get?view=graph-rest-1.0"
+    },
+    {
+      "operation": "authentication_strength.list",
+      "upstream_path": "/policies/authenticationStrengthPolicies",
+      "operation_id": "policies.ListAuthenticationStrengthPolicies",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/authenticationstrengthroot-list-policies?view=graph-rest-1.0"
+    },
+    {
+      "operation": "authentication_strength.get",
+      "upstream_path": "/policies/authenticationStrengthPolicies/{authenticationStrengthPolicy-id}",
+      "operation_id": "policies.GetAuthenticationStrengthPolicies",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/authenticationstrengthpolicy-get?view=graph-rest-1.0"
+    },
+    {
+      "operation": "authentication_policy.get",
+      "upstream_path": "/policies/authenticationMethodsPolicy",
+      "operation_id": "policies.GetAuthenticationMethodsPolicy",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/authenticationmethodspolicy-get?view=graph-rest-1.0"
+    },
+    {
+      "operation": "role_assignment.get",
+      "upstream_path": "/roleManagement/directory/roleAssignments/{unifiedRoleAssignment-id}",
+      "operation_id": "roleManagement.directory.GetRoleAssignments",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/unifiedroleassignment-get?view=graph-rest-1.0"
+    },
+    {
+      "operation": "administrative_unit.list",
+      "upstream_path": "/directory/administrativeUnits",
+      "operation_id": "directory.ListAdministrativeUnits",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/directory-list-administrativeunits?view=graph-rest-1.0"
+    },
+    {
+      "operation": "administrative_unit.get",
+      "upstream_path": "/directory/administrativeUnits/{administrativeUnit-id}",
+      "operation_id": "directory.GetAdministrativeUnits",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/administrativeunit-get?view=graph-rest-1.0"
+    },
+    {
+      "operation": "administrative_unit.list_members",
+      "upstream_path": "/directory/administrativeUnits/{administrativeUnit-id}/members",
+      "operation_id": "directory.administrativeUnits.ListMembers",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/administrativeunit-list-members?view=graph-rest-1.0"
+    },
+    {
+      "operation": "organization.list",
+      "upstream_path": "/organization",
+      "operation_id": "organization.organization.ListOrganization",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/organization-list?view=graph-rest-1.0"
+    },
+    {
+      "operation": "organization.get",
+      "upstream_path": "/organization/{organization-id}",
+      "operation_id": "organization.organization.GetOrganization",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/organization-get?view=graph-rest-1.0"
+    },
+    {
+      "operation": "domain.list",
+      "upstream_path": "/domains",
+      "operation_id": "domains.domain.ListDomain",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/domain-list?view=graph-rest-1.0"
+    },
+    {
+      "operation": "domain.get",
+      "upstream_path": "/domains/{domain-id}",
+      "operation_id": "domains.domain.GetDomain",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/domain-get?view=graph-rest-1.0"
+    },
+    {
+      "operation": "subscribed_sku.list",
+      "upstream_path": "/subscribedSkus",
+      "operation_id": "subscribedSkus.subscribedSku.ListSubscribedSku",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/subscribedsku-list?view=graph-rest-1.0"
+    },
+    {
+      "operation": "subscribed_sku.get",
+      "upstream_path": "/subscribedSkus/{subscribedSku-id}",
+      "operation_id": "subscribedSkus.subscribedSku.GetSubscribedSku",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/subscribedsku-get?view=graph-rest-1.0"
+    },
+    {
+      "operation": "group.list_members",
+      "upstream_path": "/groups/{group-id}/members",
+      "operation_id": "groups.ListMembers",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/group-list-members?view=graph-rest-1.0"
+    },
+    {
+      "operation": "group.list_transitive_members",
+      "upstream_path": "/groups/{group-id}/transitiveMembers",
+      "operation_id": "groups.ListTransitiveMembers",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/group-list-transitivemembers?view=graph-rest-1.0"
+    },
+    {
+      "operation": "user.list_groups",
+      "upstream_path": "/users/{user-id}/memberOf/graph.group",
+      "operation_id": "users.ListMemberOf.AsGroup",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/user-list-memberof?view=graph-rest-1.0"
+    },
+    {
+      "operation": "user.list_transitive_groups",
+      "upstream_path": "/users/{user-id}/transitiveMemberOf/graph.group",
+      "operation_id": "users.ListTransitiveMemberOf.AsGroup",
+      "documentation": "https://learn.microsoft.com/en-us/graph/api/user-list-transitivememberof?view=graph-rest-1.0"
+    }
+  ]
+}

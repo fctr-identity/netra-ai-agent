@@ -1,0 +1,228 @@
+import os
+import asyncio
+import logging
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+from contextlib import asynccontextmanager
+from .routers import auth, entra_sync as sync, react_stream, history
+from src.utils.logging import logger
+from src.core.storage.operations import DatabaseOperations
+from src.core.storage.models import AuthUser
+from sqlalchemy import inspect, create_engine
+from src.config.settings import settings
+
+# Suppress specific Windows socket cleanup errors in asyncio
+class WindowsSocketErrorFilter(logging.Filter):
+    def filter(self, record):
+        # Filter out Windows socket cleanup errors that are harmless
+        if record.name == "asyncio":
+            message = str(record.getMessage()) if hasattr(record, 'getMessage') else str(record.msg)
+            # Filter various connection reset scenarios
+            error_patterns = [
+                "ConnectionResetError",
+                "An existing connection was forcibly closed by the remote host",
+                "_call_connection_lost",
+                "WinError 10054"
+            ]
+            if any(pattern in message for pattern in error_patterns):
+                return False
+        return True
+
+# Apply the filter to the asyncio logger
+asyncio_logger = logging.getLogger("asyncio")
+asyncio_logger.addFilter(WindowsSocketErrorFilter())
+
+# Security Headers Middleware
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        
+        # Basic security headers
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        
+        # Referrer policy
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        
+        # HTTPS enforcement with HSTS header
+        if request.url.scheme == "https":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        
+        # Permissions policy (formerly Feature-Policy)
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=(), payment=()"
+        
+        # Content Security Policy - updated to prefer HTTPS
+        csp = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "  # Allow inline scripts for Vue
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "img-src 'self' data:; "
+            "font-src 'self' https://fonts.gstatic.com data:; "
+            "connect-src 'self' https:; "  # Only allow HTTPS connections
+            "frame-ancestors 'none';"
+        )
+        response.headers["Content-Security-Policy"] = csp
+        
+        return response
+
+# Modern lifespan approach (replacing on_event)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup code
+    logger.info("Initializing Netra AI Agent API")
+    
+    # Generate lightweight reference for React agent if missing
+    try:
+        from src.core.agents.api_discovery_agent import generate_lightweight_onereact_json
+        lightweight_data = generate_lightweight_onereact_json(force_regenerate=False)
+        logger.info(f"Lightweight reference ready: {len(lightweight_data.get('operations', []))} operations")
+    except Exception as e:
+        logger.warning(f"Failed to generate lightweight reference: {e}")
+    
+    logger.info("Initializing authentication database...")
+    db = DatabaseOperations()
+    
+    await db.init_db()
+    
+    logger.info(
+        f"Conversation runtime storage: {settings.CHAT_SESSIONS_DIR} (created automatically if missing)"
+    )
+    
+    engine = create_engine(f"sqlite:///{settings.SQLITE_PATH}")
+    inspector = inspect(engine)
+    if 'auth_users' not in inspector.get_table_names():
+        logger.info("Creating auth_users table...")
+        from sqlalchemy.schema import CreateTable
+        with engine.begin() as conn:
+            conn.execute(CreateTable(AuthUser.__table__))
+        logger.info("Auth users table created successfully")
+    else:
+        logger.debug("Auth users table already exists. Do not have to create a new one")
+    
+    # Note: query_history table is automatically created/migrated by init_db() above
+    # This handles upgrades from older versions without query_history table
+    logger.info("Database initialization complete")
+
+    async with db.get_session() as session:
+        setup_completed = await db.check_setup_completed(session)
+
+    if setup_completed:
+        auth._clear_ephemeral_setup_token()
+    else:
+        auth.ensure_ephemeral_setup_token()
+    
+    # Modern Execution Manager handles process lifecycle automatically
+    #logger.info("Using Modern Execution Manager - no background cleanup needed")
+
+    if teams_bot is not None:
+        await teams_bot.start()
+
+    _procedure_admission_task = None
+    if settings.QUERY_PROCEDURES_ENABLED:
+        from src.core.procedure_admission import run_admission_worker
+        _procedure_admission_task = asyncio.create_task(run_admission_worker())
+
+    try:
+        yield
+    finally:
+        from .shutdown import stop_services
+        logger.info("Shutting down Netra AI Agent API")
+        closers = {}
+        if teams_bot is not None:
+            closers["Teams"] = teams_bot.close
+        await stop_services({
+            "query admission": _procedure_admission_task,
+            **{f"directory sync {key}": task for key, (task, event) in sync.active_syncs.items()},
+        }, closers)
+        await db.close()
+        engine.dispose()
+        logger.info("Application service cleanup finished")
+
+# Create FastAPI app with lifespan manager
+app = FastAPI(
+    title="Netra AI",
+    description="API for Netra AI with SQL Generation capabilities",
+    version="0.1.0-beta.3",
+    lifespan=lifespan
+)
+
+# Add security headers middleware first
+app.add_middleware(SecurityHeadersMiddleware)
+
+# Configure CORS - update default to HTTPS
+default_origins = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8001,http://127.0.0.1:8001"
+allowed_origins = os.environ.get("ALLOWED_ORIGINS", default_origins).split(",")
+logger.info(f"Configuring CORS with allowed origins: {allowed_origins}")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:[0-9]+)?",  # Only allow HTTPS
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Register router for API endpoints
+app.include_router(auth.router) 
+app.include_router(sync.router, prefix="/api")
+app.include_router(react_stream.router, prefix="/api")  # ReAct agent streaming
+app.include_router(history.router, prefix="/api")  # Query history and favorites
+app.include_router(history.sessions_router, prefix="/api")  # Conversation sessions and turns
+
+# The integration is entirely absent unless enabled. Invalid enabled configuration
+# fails startup rather than exposing an anonymously accessible bot.
+teams_bot = None
+if settings.TEAMS_ENABLE:
+    from pathlib import Path
+    from src.integrations.teams.config import TeamsConfig
+    from src.integrations.teams.teams_app import TeamsBot
+    teams_bot = TeamsBot(TeamsConfig(), Path(settings.DB_DIR))
+    app.mount("/teams", teams_bot.http_app)
+
+# Mount static files
+app.mount("/assets", StaticFiles(directory="src/api/static/assets", check_dir=False), name="assets")
+
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "service": "Netra AI Agent API"
+    }
+
+@app.get("/{full_path:path}")
+async def serve_frontend(request: Request, full_path: str):
+    # Define the base directory for static files (using absolute path)
+    static_dir = os.path.abspath("src/api/static")
+    
+    # Clean the path to prevent directory traversal
+    # Remove any '..' path segments and normalize
+    sanitized_path = os.path.normpath(full_path)
+    
+    # If path attempts to traverse up directories or is absolute, reject it
+    if sanitized_path.startswith("..") or sanitized_path.startswith("/") or "\\" in sanitized_path:
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "Access denied"}
+        )
+    
+    # Securely join paths and resolve to absolute path
+    file_path = os.path.abspath(os.path.join(static_dir, sanitized_path))
+    
+    # Ensure the final path is still within the static directory
+    if not file_path.startswith(static_dir):
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "Access denied"}
+        )
+    
+    # Finally serve the file if it exists
+    if os.path.isfile(file_path):
+        return FileResponse(file_path)
+    
+    # Default to index.html
+    return FileResponse(os.path.join(static_dir, "index.html"))

@@ -1,0 +1,45 @@
+:root {
+    /* Surfaces - quiet workspace */
+    --bg-page: var(--workspace-canvas); /* Match the outer page to the main workspace. */
+    --bg-gradient: var(--workspace-canvas); /* Legacy alias - now flat. */
+    --surface: #ffffff;
+    --workspace-canvas: #ffffff;
+    --workspace-outline: #b8c2cf;
+    --surface-muted: #f5f7fa;
+    --surface-sidebar: #f8fafc;
+    --surface-hover: #eff3f7;
+
+    /* Typography */
+    --text-primary: #1a1a1a;
+    --text-secondary: #52525b;
+    --text-muted: #687582;
+    --text-faint: #b4b4b0;
+
+    /* Brand - used sparingly for actions/focus/selected */
+    --primary-rgb: 50, 111, 163;
+    --primary: #326fa3;        /* Muted blue for actions and focus */
+    --primary-hover: #2a608f;
+    --primary-light: #f0f6fb;
+    --primary-dark: #275579;
+    --primary-border: #cddfeb;
+    --accent-line: var(--primary); /* Identity rail (left bar on selected) */
+
+    /* UI Components */
+    --card-bg: #FFFFFF;
+    --border-color: rgba(15, 23, 42, 0.08);   /* Hairline */
+    --border-strong: rgba(15, 23, 42, 0.14);
+
+    /* Layout */
+    --border-radius: 12px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-composer: 24px;
+    --max-width: 1400px;
+    --results-max-width: 1800px;
+
+    /* Shadows - very restrained */
+    --shadow-light: none;
+    --shadow-medium: none;
+    --shadow-floating: none;
+  }

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" role="img" aria-labelledby="title" shape-rendering="geometricPrecision">
+<title id="title">Fctr v5.3 primary fingerprint</title>
+<style>.outer{stroke:#17243A}@media(prefers-color-scheme:dark){.outer{stroke:#FFFFFF;stroke-width:8.855}}</style><g data-part="fingerprint" transform="translate(5.55556 0.22222) scale(0.88889)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M4.22 75V48C4.22 24.804 24.7164 6 50 6S95.78 24.804 95.78 48V59" class="outer" stroke-width="9.2"/>
+<path d="M22.75 90V48C22.75 34.193 34.9504 23 50 23S77.25 34.193 77.25 48V74C77.25 91.673 61.6336 106 42.37 106" class="outer" stroke-width="9.2"/>
+<path d="M41.28 70V48C41.28 43.582 45.1844 40 50 40S58.72 43.582 58.72 48V74C58.72 82.284 51.3996 89 42.37 89" stroke="#16A6A1" stroke-width="9.2"/>
+</g>
+</svg>

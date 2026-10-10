@@ -1,0 +1,114 @@
+# Fctr Source-Available License 1.0
+
+Netra AI
+Copyright © 2025–2026 Fctr. All rights reserved.
+
+## 1. Scope
+
+This license governs the Netra AI source code, executable distributions,
+and documentation provided under this license (the "Software"), including
+modified versions of that material. "Fctr" refers to the copyright holder
+identified above. "You" means the individual or organization exercising the
+permissions granted here.
+
+This is a source-available license with restrictions on commercial distribution
+and service offerings. It is not the Apache License or an open-source license.
+Separately licensed third-party material remains subject to its own terms.
+
+## 2. Permitted use
+
+Subject to this license, Fctr grants you a worldwide, non-exclusive, royalty-free
+copyright license to use, copy, and modify the Software for your own personal
+use or your organization's internal purposes. Internal use by a commercial
+organization is permitted without a license fee. You may self-host the Software
+on infrastructure you control, including your own cloud accounts.
+
+You may share unmodified or modified copies without charge for noncommercial
+purposes, provided you include this license, preserve the notices required by
+section 5, and do not grant rights to Fctr's material beyond this license.
+Recipients must comply with this license. This permission does not authorize
+any offering restricted by section 3.
+
+## 3. Uses requiring a separate commercial license
+
+Unless Fctr expressly authorizes the use in a separate written commercial
+license, you may not:
+
+- Sell, rent, commercially license, or otherwise commercially redistribute the
+  Software or modified versions of it.
+- Incorporate the Software or modified versions into a product or service sold
+  or commercially licensed to third parties, including through a bundle,
+  subscription, or paid access arrangement.
+- Provide the Software or its functionality to third parties as a hosted
+  service, software-as-a-service offering, managed service provider deployment,
+  or multi-tenant service offering, whether or not a fee is charged.
+
+Each installation must connect to only one Microsoft Entra tenant unless a
+separate written commercial license permits otherwise. Splitting a service
+across single-tenant installations does not exempt it from the restrictions
+above. Self-hosting solely for your own internal use under section 2 is permitted.
+
+For commercial licensing, contact dan@fctr.io.
+
+## 4. Tenant data and AI credentials
+
+You must keep tenant-specific data within systems and accounts controlled by
+you or your organization, except for data sent to your chosen AI provider as
+needed to process your queries. That exception may include selected directory
+records and query results, not just query text. It does not authorize unrelated
+external sharing of tenant data. You are responsible for authorizing that
+processing and configuring the deployment accordingly.
+
+You must use your own authorized AI provider credentials, keep them private,
+and not share or redistribute provider keys to third parties. Secure use of
+those credentials within your own authorized deployment is permitted.
+
+## 5. Notices and attribution
+
+Copies and modified versions must retain applicable copyright, license, and
+attribution notices, including Fctr and Tako attribution. Distributed modified
+files must identify that changes were made. Documentation or user guides derived
+from this project must acknowledge Netra AI and its origins in Fctr's Tako
+AI Agent.
+
+This license grants no rights to use Fctr, Netra AI, or Tako trademarks except for
+accurate attribution. You may not imply endorsement by the original authors.
+
+## 6. Contributions and future releases
+
+For contributions you intentionally submit for inclusion in the Software after
+this license is adopted, unless a separate written agreement provides otherwise,
+you grant Fctr a perpetual, worldwide, non-exclusive, royalty-free, irrevocable
+copyright license to use, reproduce, modify, distribute, and sublicense those
+contributions under this license or other commercial or noncommercial terms.
+You retain ownership of your contributions and must have authority to grant
+these rights. Material clearly marked as not intended for inclusion is excluded.
+This section does not retroactively change the terms of earlier contributions.
+
+Fctr may offer future versions or additional features under different terms and
+may charge for commercial licenses, support, maintenance, or other services.
+Changes to future terms do not replace the terms governing copies already
+received. This license does not revoke rights independently granted under an
+earlier license or change any third-party license.
+
+## 7. Termination
+
+Your permissions under this license terminate if you violate its terms. If you
+cure the violation within 30 days after first becoming aware of it, your
+permissions are reinstated. Otherwise, reinstatement requires written permission
+from Fctr. Termination does not eliminate obligations or liability arising from
+an earlier violation. Sections 5, 8, and 9 continue to apply after termination.
+
+## 8. No warranty
+
+TO THE EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS PROVIDED "AS IS" AND
+"AS AVAILABLE", WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
+YOU ARE RESPONSIBLE FOR DETERMINING WHETHER THE SOFTWARE IS SUITABLE FOR YOUR USE.
+
+## 9. Limitation of liability
+
+TO THE EXTENT PERMITTED BY APPLICABLE LAW, THE AUTHORS AND COPYRIGHT HOLDERS
+WILL NOT BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM OR
+RELATED TO THE SOFTWARE OR ITS USE, WHETHER IN CONTRACT, TORT, OR OTHERWISE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.

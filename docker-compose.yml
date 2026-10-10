@@ -1,0 +1,14 @@
+services:
+  netra:
+    image: fctrid/netra-ai-agent-for-entra:latest
+    ports:
+      - "127.0.0.1:8001:8001"
+    env_file: .env
+    volumes:
+      - netra-data:/app/sqlite_db
+      - netra-chats:/app/chat_sessions
+    init: true
+
+volumes:
+  netra-data:
+  netra-chats:

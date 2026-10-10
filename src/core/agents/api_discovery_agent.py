@@ -1,0 +1,835 @@
+"""
+API Discovery Agent - Phase 2 of Multi-Agent Architecture
+
+Responsibilities:
+- Load API endpoints and filter by operations needed
+- Generate and test API code
+- Save API results to artifacts
+- Enrich data from SQL phase
+
+Input: SQLDiscoveryResult reasoning + artifacts from SQL phase
+Output: APIDiscoveryResult with success status
+"""
+
+from pydantic_ai import RunContext, FunctionToolset, ModelRetry, ToolReturn, UsageLimits
+from pydantic_ai.capabilities import PrepareTools
+from pydantic_ai.exceptions import UsageLimitExceeded
+from pydantic import BaseModel
+from typing import List, Dict, Any, Optional
+from dataclasses import dataclass
+from pathlib import Path
+import json
+import time
+import asyncio
+from uuid import uuid4
+
+from src.utils.logging import get_logger
+from src.utils.security_config import validate_generated_code
+from src.core.agents.api_test_progress import response_diagnostics
+from src.core.agents.agent_callbacks import (
+    notify_progress_to_user,
+    notify_step_start_to_user,
+    notify_step_end_to_user
+)
+from src.core.agents import DEFAULT_LOCAL_TOOL_CALL_TIMEOUT_SECONDS, build_agent
+from src.core.models.model_picker import ModelType
+from src.data.schemas.artifact_manifest import append_artifacts_with_result_sets
+from src.data.schemas.discovery_results import DiscoveryResults, discovery_result_status, result_preview
+
+# Import schema function for database context
+from src.data.schemas.entra_schema import get_entra_database_schema
+
+logger = get_logger("netra_ai_agent")
+
+API_USAGE_LIMITS = UsageLimits(
+    request_limit=12,
+    tool_calls_limit=10,
+)
+
+GRAPH_EVENT_TYPES = {}  # No inherited event taxonomy.
+
+# Output Models
+# ============================================================================
+
+class APIDiscoveryResult(BaseModel):
+    """Output from API Discovery Agent"""
+    success: bool
+    api_data_retrieved: bool = False
+    found_data: List[str] = []  # Entities successfully retrieved: ['roles', 'mfa_factors']
+    needs_sql: Optional[List[str]] = None  # Entities API agent realized it needs from SQL: ['users', 'groups']
+    reasoning: str = ""  # Plain English: 'Fetched roles for 3 users. MFA factors retrieved.'
+    error: Optional[str] = None
+
+
+# ============================================================================
+# Dependencies
+# ============================================================================
+
+@dataclass
+class APIDiscoveryDeps:
+    """Dependencies for API Discovery Agent"""
+    correlation_id: str
+    artifacts_file: Path
+    sql_reasoning: Optional[str] = None  # Feedback from SQL agent (None if SQL phase skipped)
+    sql_discovered_data: Optional[str] = None  # JSON string of data SQL found (None if SQL phase skipped)
+    sql_needs_api: Optional[List[str]] = None  # Structured list of entities to fetch via API
+    sql_found_data: Optional[List[str]] = None  # Structured list of entities already found in SQL
+    followup_scope_summary: Optional[str] = None  # Summary of prior saved result-set scope for follow-up turns
+    followup_scope_context: Optional[str] = None  # JSON string describing the anchored prior result-set scope
+    followup_result_set_refs: Optional[List[str]] = None  # Anchored prior result-set ids to preserve
+    entra_client: Any = None  # EntraClient instance
+    cancellation_check: callable = None
+    endpoints: List[Dict[str, Any]] = None  # Full endpoint details (injected like one_react_agent)
+    
+    # Streaming callbacks
+    step_start_callback: Optional[callable] = None
+    step_end_callback: Optional[callable] = None
+    tool_call_callback: Optional[callable] = None  # For tool call notifications
+    progress_callback: Optional[callable] = None  # For intermediate progress updates
+    
+    # Tool call limits (shared across all agents)
+    global_tool_calls: int = 0  # Current count across all agents
+    max_global_tool_calls: int = 30  # From env variable MAX_TOOL_CALLS
+    
+    # Per-tool limits (manual tracking where Pydantic AI can't help)
+    api_tests_executed: int = 0  # Max 3
+    
+    # State tracking
+    current_step: int = 5  # Starts after SQL (steps 1-5)
+    current_tools: List[Dict[str, str]] = None  # Track tools used in current step
+    artifacts: List[Dict] = None  # Artifact storage (shared with orchestrator)
+    test_results: Optional[DiscoveryResults] = None
+    allow_event_type_lookup: bool = False
+    
+    def __post_init__(self):
+        """Initialize mutable defaults"""
+        if self.current_tools is None:
+            self.current_tools = []
+        if self.artifacts is None:
+            self.artifacts = []
+
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+def generate_lightweight_onereact_json(force_regenerate: bool = False) -> Dict[str, Any]:
+    """
+    Generate a minimal lightweight JSON structure for API endpoints.
+    Uses simple dot notation: entity.operation (e.g., "application.list")
+    
+    Args:
+        force_regenerate: If True, regenerate even if file exists
+        
+    Returns:
+        Dict with 'operations' (list of strings)
+    """
+    schemas_dir = Path("src/data/schemas")
+    lightweight_path = schemas_dir / "graph_read_operations.json"
+    source_path = schemas_dir / "graph_get_endpoints.json"
+    
+    # Load existing file if it exists and regeneration not forced
+    if lightweight_path.exists() and not force_regenerate:
+        logger.info(f"Loading existing graph_read_operations.json from {lightweight_path}")
+        try:
+            with open(lightweight_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.warning(f"Failed to load existing file: {e}. Regenerating...")
+    
+    # Generate new lightweight structure
+    logger.info("Generating new graph_read_operations.json...")
+    
+    # Load source endpoint data
+    if not source_path.exists():
+        logger.error(f"Source file not found: {source_path}")
+        return {"operations": []}
+    
+    try:
+        with open(source_path, 'r', encoding='utf-8') as f:
+            source_data = json.load(f)
+    except Exception as e:
+        logger.error(f"Failed to load source file: {e}")
+        return {"operations": []}
+    
+    # Extract operations in dot notation format
+    operations = []
+    seen_operations = set()  # Deduplicate
+    
+    endpoints = source_data.get('endpoints', [])
+    for endpoint in endpoints:
+        entity = endpoint.get('entity', '')
+        operation = endpoint.get('operation', '')
+        
+        if entity and operation:
+            # Create dot notation: entity.operation
+            op_string = f"{entity}.{operation}"
+            if op_string not in seen_operations:
+                operations.append(op_string)
+                seen_operations.add(op_string)
+    
+    # Sort for consistency
+    operations.sort()
+    
+    # Create minimal structure
+    lightweight_data = {
+        "operations": operations
+    }
+    
+    # Save to file
+    try:
+        schemas_dir.mkdir(parents=True, exist_ok=True)
+        with open(lightweight_path, 'w', encoding='utf-8') as f:
+            json.dump(lightweight_data, f, indent=2)
+        logger.info(f"Generated graph_read_operations.json with {len(operations)} operations")
+    except Exception as e:
+        logger.error(f"Failed to save graph_read_operations.json: {e}")
+    
+    return lightweight_data
+
+
+def load_lightweight_endpoints() -> Dict[str, Any]:
+    """Load lightweight endpoint structure"""
+    return generate_lightweight_onereact_json()
+
+
+def should_allow_event_type_lookup(user_query, deps):
+    return False
+
+
+def prepare_api_tools(ctx: RunContext[APIDiscoveryDeps], tool_defs: list[Any]) -> list[Any]:
+    """Hide the event taxonomy helper unless the current run is clearly log-oriented."""
+    if ctx.deps.allow_event_type_lookup:
+        return tool_defs
+
+    return [tool_def for tool_def in tool_defs if getattr(tool_def, "name", "") != "get_detailed_events_from_keys"]
+
+
+async def dump_artifacts_to_file(artifacts_file: Path, artifacts: List[dict]):
+    """Append to existing artifacts file"""
+    try:
+        append_artifacts_with_result_sets(artifacts_file, artifacts, source_specialist="api")
+        logger.debug(f"Artifacts updated: {artifacts_file}")
+    except Exception as e:
+        logger.error(f"Failed to update artifacts: {e}")
+        raise
+
+
+# ============================================================================
+# API Discovery Agent Definition
+# ============================================================================
+
+# Load system prompt
+PROMPT_FILE = Path(__file__).parent / "prompts" / "api_discovery_prompt.txt"
+try:
+    with open(PROMPT_FILE, 'r', encoding='utf-8') as f:
+        BASE_SYSTEM_PROMPT = f.read()
+except FileNotFoundError:
+    logger.error(f"API discovery prompt not found: {PROMPT_FILE}")
+    BASE_SYSTEM_PROMPT = """You are an API discovery specialist.
+Filter endpoints, generate API code, and test calls. Evidence is saved automatically."""
+
+
+# Create agent
+api_discovery_agent = build_agent(
+    ModelType.CODING,
+    name="api_discovery_agent",
+    instructions=BASE_SYSTEM_PROMPT,
+    output_type=APIDiscoveryResult,
+    deps_type=APIDiscoveryDeps,
+    capabilities=[PrepareTools(prepare_api_tools)],
+)
+
+
+@api_discovery_agent.output_validator
+def validate_api_discovery_output(
+    ctx: RunContext[APIDiscoveryDeps],
+    result: APIDiscoveryResult,
+) -> APIDiscoveryResult:
+    """Reject contradictory outputs and require artifacts when API data was actually retrieved."""
+    artifacts = [artifact for artifact in (getattr(ctx.deps, "artifacts", []) or [])
+                 if artifact.get('category') == 'api_results']
+
+    if result.needs_sql == []:
+        result.needs_sql = None
+
+    if result.found_data and not result.api_data_retrieved:
+        result.api_data_retrieved = True
+
+    if result.success:
+        if result.error:
+            raise ModelRetry("Successful API discovery output cannot include an error")
+        if result.api_data_retrieved and not artifacts:
+            raise ModelRetry(
+                "No retrieved API evidence was retained. Report the missing data or storage failure."
+            )
+        if not result.api_data_retrieved and not result.needs_sql:
+            raise ModelRetry(
+                "Successful API discovery must either retrieve API data or explicitly request SQL handoff"
+            )
+        return result
+
+    if not result.error:
+        raise ModelRetry("Failed API discovery output must include an error message")
+
+    if result.api_data_retrieved and not artifacts:
+        raise ModelRetry("No retrieved API evidence was retained; do not claim api_data_retrieved=True.")
+
+    return result
+
+
+# ============================================================================
+# Tool Implementations
+# ============================================================================
+
+def create_api_toolset(deps: APIDiscoveryDeps) -> FunctionToolset:
+    """Create API discovery tools"""
+    toolset = FunctionToolset()
+    
+    # Track artifacts
+    if not hasattr(deps, 'artifacts'):
+        deps.artifacts = []
+    
+    def check_cancellation():
+        if deps.cancellation_check and deps.cancellation_check():
+            raise asyncio.CancelledError("User cancelled execution")
+    
+    async def notify_tool_call(tool_name: str, description: str, **details):
+        """Emit tool call event to frontend"""
+        if deps.tool_call_callback:
+            await deps.tool_call_callback({
+                "tool_name": tool_name,
+                "description": description,
+                **details,
+                "timestamp": time.time()
+            })
+    
+    async def notify_step_start(title: str, reasoning: str, tool_name: Optional[str] = None):
+        if deps.step_start_callback:
+            deps.current_step += 1
+            
+            # Track tool if provided
+            if tool_name:
+                deps.current_tools.append({"name": tool_name})
+            
+            await deps.step_start_callback({
+                "step": deps.current_step,
+                "title": title,
+                "text": reasoning,
+                "tools": deps.current_tools.copy(),
+                "timestamp": time.time()
+            })
+    
+    async def notify_step_end(title: str, result: str):
+        if deps.step_end_callback:
+            await deps.step_end_callback({
+                "step": deps.current_step,
+                "title": title,
+                "text": result,
+                "timestamp": time.time()
+            })
+        # Clear tools for next step
+        deps.current_tools.clear()
+    
+    # ========================================================================
+    # Tool 1: Load API Endpoints
+    # ========================================================================
+    
+    async def load_comprehensive_api_endpoints() -> ToolReturn:
+        """
+        Load all available API operations.
+        
+        Returns dot notation operations such as "user.list".
+        Use when required operations are missing from the supplied catalog details.
+        """
+        check_cancellation()
+        await notify_tool_call("load_comprehensive_api_endpoints", "Loading API endpoints catalog")
+        
+        logger.info(f"[{deps.correlation_id}] Loading API endpoints")
+        
+        try:
+            data = load_lightweight_endpoints()
+            operations = data.get('operations', [])
+            
+            await notify_step_end(
+                "Endpoints Loaded",
+                f"Loaded {len(operations)} operations"
+            )
+            
+            return ToolReturn(
+                return_value=f"✅ Loaded {len(operations)} operations",
+                content=json.dumps(operations, separators=(',', ':')),
+                metadata={'operation_count': len(operations)}
+            )
+        except Exception as e:
+            logger.error(f"[{deps.correlation_id}] Failed to load endpoints: {e}")
+            return ToolReturn(
+                return_value=f"❌ Failed to load endpoints: {e}",
+                content=str(e),
+                metadata={'error': True}
+            )
+    
+    # ========================================================================
+    # Tool 2: Filter Endpoints by Operations
+    # ========================================================================
+    
+    async def filter_endpoints_by_operations(operations: List[str]) -> ToolReturn:
+        """
+        Filter endpoints for specific operations.
+        
+        Args:
+            operations: Exact catalog operation names, such as ["user.list", "group.list"]
+        
+        Returns:
+            Filtered endpoint details with paths, methods, parameters
+        """
+        check_cancellation()
+        await notify_tool_call("filter_endpoints_by_operations", f"Filtering endpoints for: {', '.join(operations[:3])}{'...' if len(operations) > 3 else ''}")
+        
+        logger.info(f"[{deps.correlation_id}] Filtering operations: {operations}")
+        
+        try:
+            # Use injected endpoints (same pattern as one_react_agent)
+            filtered = []
+            for op in operations:
+                # Split operation (e.g., "user.list" → entity="user", operation="list")
+                if '.' in op:
+                    parts = op.split('.', 1)
+                    search_entity = parts[0]
+                    search_operation = parts[1]
+                else:
+                    search_entity = None
+                    search_operation = op
+                
+                # Find matching endpoint
+                for endpoint in deps.endpoints:
+                    endpoint_entity = endpoint.get('entity', '')
+                    endpoint_operation = endpoint.get('operation', '')
+                    
+                    if search_entity:
+                        # Match both entity and operation
+                        if endpoint_entity == search_entity and endpoint_operation == search_operation:
+                            filtered.append(endpoint)
+                            break
+                    else:
+                        # Match operation only
+                        if endpoint_operation == search_operation:
+                            filtered.append(endpoint)
+                            break
+            
+            await notify_step_end(
+                "Endpoints Filtered",
+                f"Found {len(filtered)} matching endpoints"
+            )
+            
+            return ToolReturn(
+                return_value=f"✅ Filtered {len(filtered)} endpoints",
+                content=json.dumps(filtered, separators=(',', ':')),
+                metadata={'filtered_count': len(filtered)}
+            )
+        except Exception as e:
+            logger.error(f"[{deps.correlation_id}] Filtering failed: {e}")
+            return ToolReturn(
+                return_value=f"❌ Filtering failed: {e}",
+                content=str(e),
+                metadata={'error': True}
+            )
+    
+    # ========================================================================
+    # Tool 3: Execute API Test
+    # ========================================================================
+    
+    async def execute_test_query(code: str, description: str = "Testing API query") -> ToolReturn:
+        """
+        Execute API code (Python using EntraSDKClientManager).
+        Auto-limited to 3 results during testing.
+        
+        Args:
+            code: Python code using entra_client
+            description: Brief description of what this query tests (e.g., "Find group sso-super-admins")
+        """
+        check_cancellation()
+        
+        # Enforce tool call limits
+        deps.global_tool_calls += 1
+        deps.api_tests_executed += 1
+        
+        # Check global limit
+        if deps.global_tool_calls > deps.max_global_tool_calls:
+            raise RuntimeError(
+                f"Global tool call limit exceeded ({deps.global_tool_calls}/{deps.max_global_tool_calls}). "
+                f"Cannot execute further tools. Adjust MAX_TOOL_CALLS environment variable if needed."
+            )
+        
+        # Check per-tool limit
+        if deps.api_tests_executed > 10:
+            raise RuntimeError(
+                f"API test query limit exceeded ({deps.api_tests_executed}/10). "
+                f"Stop testing and finalize with success/failure."
+            )
+        
+        # Notify tool call start
+        test_id = f"api-test-{uuid4().hex}"
+
+        async def finish_test(status):
+            if deps.progress_callback:
+                try:
+                    await deps.progress_callback({'details': {'kind': 'api_test_end', 'test_id': test_id, 'status': status}})
+                except Exception:
+                    pass
+
+        await notify_tool_call("execute_test_query_api", description, test_id=test_id)
+        
+        logger.info(f"[{deps.correlation_id}] Executing API test #{deps.api_tests_executed} (global: {deps.global_tool_calls}/{deps.max_global_tool_calls}, api_tests: {deps.api_tests_executed}/10)")
+        
+        # Log the generated API code
+        logger.info(f"[{deps.correlation_id}] Generated API code:\n{code}")
+        
+        # SECURITY VALIDATION: Check Python code for dangerous patterns
+        validation_result = validate_generated_code(code)
+        if not validation_result.is_valid:
+            logger.warning(f"[{deps.correlation_id}] Code validation failed: {validation_result.violations}")
+            await finish_test("failed")
+            # NOTE: Don't notify_step_end for tool-level failures - let LLM retry
+            return ToolReturn(
+                return_value=f"❌ Security validation failed",
+                content=f"Violations: {', '.join(validation_result.violations)}",
+                metadata={'success': False, 'security_error': True}
+            )
+        
+        # The worker's Graph client validates every resolved endpoint, method and
+        # continuation URL. A regex here would mistake a constructed path's
+        # literal prefix for the complete endpoint and reject valid detail reads.
+        # Generated discovery runs in a terminable local child, not the service loop.
+        try:
+            from src.core.process_runner import run_worker, WORKER_EVENT
+
+            async def relay(line):
+                if line.startswith('__NETRA_HTTP__'):
+                    logger.info("Graph HTTP timing: %s", line[len('__NETRA_HTTP__'):])
+                    return
+                if line.startswith('__PROGRESS__'):
+                    if deps.progress_callback:
+                        try:
+                            await deps.progress_callback(json.loads(line[len('__PROGRESS__'):]))
+                        except Exception:
+                            pass
+                    return
+                if not line.startswith(WORKER_EVENT):
+                    return
+                try:
+                    event = json.loads(line[len(WORKER_EVENT):])
+                    if event.get('kind') == 'progress' and deps.progress_callback:
+                        await deps.progress_callback(event['data'])
+                    elif event.get('kind') == 'diagnostic':
+                        logger.info(f"[{deps.correlation_id}] API request diagnostic: {json.dumps(event['data'])}")
+                except Exception:
+                    # Match DiscoveryTestClient: reporting must not change retrieval.
+                    # CancelledError still propagates to the process supervisor.
+                    pass
+
+            result = await run_worker('api', {
+                'code': code, 'endpoints': deps.endpoints, 'test_id': test_id,
+            }, cancellation_check=deps.cancellation_check, on_stderr=relay)
+
+            # Persist evidence before returning its preview; no model save call.
+            if deps.test_results is None:
+                deps.test_results = DiscoveryResults(deps.artifacts_file)
+            deps.test_results.put(test_id, code, result)
+            evidence_status = discovery_result_status(result)
+            artifact = {
+                'key': test_id,
+                'category': 'api_results' if evidence_status in ('available', 'partial') else 'api_test_diagnostics',
+                'content': json.dumps(result, separators=(',', ':'), default=str),
+                'api_code': code,
+                'test_id': test_id,
+                'notes': f'{description}. Discovery sample; status={evidence_status}. '
+                         'Inspect raw responses for errors and missing requirements; not a full-population result.',
+                'metadata': {'discovery_status': evidence_status},
+                'timestamp': time.time(),
+            }
+            await dump_artifacts_to_file(deps.artifacts_file, [artifact])
+            deps.artifacts.append(artifact)
+            logger.info(f"[{deps.correlation_id}] Automatically saved API evidence: {test_id} ({evidence_status})")
+            await finish_test('failed' if evidence_status == 'error' else 'success')
+
+            empty_result = evidence_status == 'empty'
+            result_summary = {
+                'available': 'Discovery sample saved; full retrieval pending',
+                'empty': 'Discovery returned no matching records',
+                'partial': 'Discovery evidence saved; incomplete retrieval needs review',
+                'error': 'Discovery request failed; diagnostic saved',
+            }[evidence_status]
+            await notify_step_end(
+                f"API Test #{deps.api_tests_executed} Complete",
+                result_summary
+            )
+            
+            preview = result_preview(result)
+            returned_content = json.dumps({'test_id': test_id, 'artifact_key': test_id,
+                                           'evidence_status': evidence_status, **preview}, separators=(',', ':'))
+            logger.info(
+                f"[{deps.correlation_id}] API test diagnostic: "
+                + json.dumps({
+                    "test_id": test_id, "test_number": deps.api_tests_executed,
+                    "execution_outcome": "returned", "empty_result": empty_result,
+                    **response_diagnostics(result),
+                    "returned_chars": len(returned_content),
+                    "truncated": preview['truncated'],
+                })
+            )
+            return ToolReturn(
+                return_value=result_summary,
+                content=returned_content,
+                metadata={'success': evidence_status != 'error',
+                          'empty_result': empty_result, 'test_id': test_id,
+                          'artifact_key': test_id, 'evidence_status': evidence_status}
+            )
+            
+        except Exception as e:
+            await finish_test('timed_out' if isinstance(e, TimeoutError) else 'failed')
+            logger.info(
+                f"[{deps.correlation_id}] API test diagnostic: "
+                + json.dumps({"test_id": test_id, "test_number": deps.api_tests_executed,
+                              "execution_outcome": "exception", "exception_type": type(e).__name__})
+            )
+            logger.error(f"[{deps.correlation_id}] API execution failed: {e}")
+            # NOTE: Don't notify_step_end for tool errors - let LLM retry with adjusted code
+            return ToolReturn(
+                return_value=f"❌ API error: {str(e)}",
+                content=f"Execution failed: {str(e)}",
+                metadata={'success': False, 'error': str(e)}
+            )
+    
+    # ========================================================================
+    # Tool 4: Inspect Saved Evidence
+    # ========================================================================
+    
+    async def inspect_test_result(test_id: str, path: Optional[List[str]] = None) -> ToolReturn:
+        """Preview a saved test result or a nested value without another Graph read.
+
+        path is a list of original response keys or array indexes, for example
+        ['signins', 'data', '0', 'status']. Omit path to inspect the root.
+        """
+        check_cancellation()
+        await notify_tool_call('inspect_test_result', 'Read saved test data')
+        try:
+            if deps.test_results is None:
+                raise ValueError('No test results exist for this discovery run')
+            value = deps.test_results.get(test_id)['result']
+            for part in path or []:
+                if isinstance(value, list):
+                    index = int(part)
+                    if index < 0:
+                        raise ValueError('Use a non-negative array index')
+                    value = value[index]
+                elif isinstance(value, dict):
+                    value = value[part]
+                else:
+                    raise ValueError('Path cannot continue through a scalar value')
+        except (ValueError, KeyError, IndexError) as exc:
+            raise ModelRetry('Unknown test ID or result path; use an ID and fields from this run') from exc
+        return ToolReturn(return_value='Saved test result inspected', content=json.dumps(
+            {'test_id': test_id, 'path': path or [], **result_preview(value)}, separators=(',', ':')))
+    
+    # ========================================================================
+    # Tool 5: Get Event Types
+    # ========================================================================
+    
+    # Register tools
+    toolset.add_function(
+        load_comprehensive_api_endpoints,
+        timeout=DEFAULT_LOCAL_TOOL_CALL_TIMEOUT_SECONDS,
+    )
+    toolset.add_function(
+        filter_endpoints_by_operations,
+        timeout=DEFAULT_LOCAL_TOOL_CALL_TIMEOUT_SECONDS,
+    )
+    toolset.add_function(execute_test_query)
+    toolset.add_function(inspect_test_result, timeout=DEFAULT_LOCAL_TOOL_CALL_TIMEOUT_SECONDS)
+    
+    return toolset
+
+
+# ============================================================================
+# Main Execution Function
+# ============================================================================
+
+async def execute_api_discovery(
+    user_query: str,
+    deps: APIDiscoveryDeps
+) -> APIDiscoveryResult:
+    """
+    Execute API discovery phase.
+    
+    Args:
+        user_query: Original user query
+        deps: API discovery dependencies with SQL reasoning
+    
+    Returns:
+        APIDiscoveryResult with success status
+    """
+    logger.info(f"[{deps.correlation_id}] Starting API discovery phase")
+    logger.info(f"[{deps.correlation_id}] SQL feedback: {deps.sql_reasoning}")
+    
+    # Helper functions for step notifications
+    async def notify_step_start(title: str, reasoning: str):
+        """Notify orchestrator of step start"""
+        if deps.step_start_callback:
+            deps.current_step += 1
+            await deps.step_start_callback({
+                "step": deps.current_step,
+                "title": title,
+                "text": reasoning,
+                "timestamp": time.time()
+            })
+    
+    async def notify_step_end(title: str, result: str):
+        """Notify orchestrator of step end"""
+        if deps.step_end_callback:
+            await deps.step_end_callback({
+                "step": deps.current_step,
+                "title": title,
+                "text": result,
+                "timestamp": time.time()
+            })
+    
+    deps.allow_event_type_lookup = should_allow_event_type_lookup(user_query, deps)
+
+    # Create toolset for this run (following one_react_agent pattern)
+    toolset = create_api_toolset(deps)
+    
+    try:
+        # Load the base prompt
+        prompt_path = Path("src/core/agents/prompts/api_discovery_prompt.txt")
+        base_prompt = prompt_path.read_text(encoding='utf-8')
+        
+        # Schema describes capabilities, not runtime availability or routing authority.
+        db_schema = get_entra_database_schema()
+        
+        # Add schema context to prompt
+        schema_context = f"""
+─────────────────────────────────────────
+DATABASE SCHEMA REFERENCE
+─────────────────────────────────────────
+{db_schema}
+
+This schema does not establish that SQL is available, populated, or current.
+Carry out the assigned API retrieval. Do not request SQL solely because a table
+exists or because a bulk lookup involves users, groups, or applications. If IDs
+are missing, discover them through supported APIs unless the supplied context
+establishes an eligible SQL dependency. Honor API-only and anchored-scope constraints.
+─────────────────────────────────────────
+"""
+        
+        # Build dynamic prompt: base query + schema + optional SQL context
+        full_prompt = user_query + "\n" + schema_context
+
+        if deps.followup_scope_summary and deps.followup_scope_context:
+            full_prompt = f"""{full_prompt}
+
+    ─────────────────────────────────────────
+    🔗 FOLLOW-UP RESULT-SET SCOPE
+    ─────────────────────────────────────────
+
+    Follow-up scope summary:
+    {deps.followup_scope_summary}
+
+    Anchored prior result-set context:
+    ```json
+    {deps.followup_scope_context}
+    ```
+
+    Preserve the population identified by these result-set refs. Retrieve only
+    missing API fields or live enrichments for that population. Widen or refresh
+    it only when the user's request explicitly calls for that change.
+    ─────────────────────────────────────────
+    """
+        
+        # If SQL phase ran, extend prompt with SQL context
+        if deps.sql_reasoning and deps.sql_discovered_data:
+            # Format structured lists
+            needs_api_str = str(deps.sql_needs_api) if deps.sql_needs_api else "[]"
+            found_data_str = str(deps.sql_found_data) if deps.sql_found_data else "[]"
+            
+            full_prompt = f"""{full_prompt}
+
+─────────────────────────────────────────
+📊 DATA ALREADY RETRIEVED FROM SQL DATABASE
+─────────────────────────────────────────
+
+ASSIGNED API REQUIREMENTS:
+{needs_api_str}
+
+ENTITIES ALREADY RETRIEVED:
+{found_data_str}
+
+SQL Agent Analysis:
+{deps.sql_reasoning}
+
+Compact SQL Artifact Context (manifests, result refs, tiny samples):
+```json
+{deps.sql_discovered_data}
+```
+
+Fetch the assigned API requirements using the supplied result-set refs and IDs.
+Do not repeat discovery of entities already retrieved. Use scoped endpoints for
+known IDs and retain the relationship to the original result set. Sample IDs
+validate the retrieval pattern; they do not establish the full population.
+Validate the missing retrieval patterns together when their dependencies are
+known; tested code and returned samples are saved automatically. Separate tests per endpoint
+are unnecessary. Do not rerun validated patterns merely to combine them.
+─────────────────────────────────────────
+"""
+        # Context includes SQL reasoning but NOT artifacts
+        # The API agent must discover data independently based on what SQL found/missed
+        result = await api_discovery_agent.run(
+            full_prompt,
+            deps=deps,
+            toolsets=[toolset],
+            usage_limits=API_USAGE_LIMITS,
+        )
+        
+        logger.info(f"[{deps.correlation_id}] API discovery complete: success={result.output.success}")
+        
+        # Log detailed result for debugging
+        if not result.output.success:
+            logger.error(f"[{deps.correlation_id}] API agent failure details:")
+            logger.error(f"[{deps.correlation_id}]   - error: {result.output.error}")
+            logger.error(f"[{deps.correlation_id}]   - reasoning: {result.output.reasoning}")
+            logger.error(f"[{deps.correlation_id}]   - found_data: {result.output.found_data}")
+            logger.error(f"[{deps.correlation_id}]   - needs_sql: {result.output.needs_sql}")
+        
+        # Notify frontend of completion
+        await notify_step_end(
+            "API Discovery Complete",
+            f"API data retrieval {'successful' if result.output.success else 'failed'}. Ready for synthesis phase."
+        )
+        
+        # Log token usage
+        usage = result.usage
+        if usage:
+            avg_per_call = usage.input_tokens / usage.requests if usage.requests > 0 else 0
+            logger.info(
+                f"[{deps.correlation_id}] API Agent Token Usage: "
+                f"{usage.input_tokens:,} input, {usage.output_tokens:,} output, "
+                f"{usage.total_tokens:,} total (across {usage.requests} API calls, "
+                f"avg {avg_per_call:,.0f} input/call)"
+            )
+        
+        return result.output, usage
+        
+    except UsageLimitExceeded:
+        # Let the orchestrator apply the shared runtime stop behavior.
+        raise
+    except Exception as e:
+        logger.error(f"[{deps.correlation_id}] API discovery failed: {e}", exc_info=True)
+        return APIDiscoveryResult(
+            success=False,
+            api_data_retrieved=False,
+            error=str(e)
+        ), None
+    finally:
+        if deps.test_results is not None:
+            deps.test_results.cleanup()
+            deps.test_results = None

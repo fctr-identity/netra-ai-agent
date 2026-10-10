@@ -1,0 +1,32 @@
+/**
+ * src/styles/settings.scss
+ *
+ * Configures SASS variables and Vuetify overwrites
+ */
+
+// https://vuetifyjs.com/features/sass-variables/`
+// @use 'vuetify/settings' with (
+//   $color-pack: false
+// );
+:root {
+    --font-family-body: 'Inter', sans-serif;
+    --font-family-display: 'Inter', sans-serif;
+    --font-size-base: 15px;
+    --font-weight-base: 400;
+  }
+  
+  html {
+    font-family: var(--font-family-body);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-base);
+  }
+  
+  .v-application {
+    [class*='text-'] {
+      font-family: var(--font-family-body) !important;
+    }
+  }
+  
+  .message-text {
+    font-family: var(--font-family-body) !important;
+  }
