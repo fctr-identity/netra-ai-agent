@@ -11,7 +11,7 @@
   <p>
     <a href="#quick-start-docker">Quick start</a> ·
     <a href="#from-a-question-to-an-investigation">Demo</a> ·
-    <a href="#what-can-netra-ai-answer">Coverage</a> ·
+    <a href="#what-can-netra-ai-answer-today">Coverage</a> ·
     <a href="#try-these-questions">Example questions</a> ·
     <a href="#why-netra-ai">Why Netra AI</a> ·
     <a href="#ai-provider-support">AI providers</a> ·
@@ -78,17 +78,18 @@ web UI, follow-ups, and exports in one application. Here's why that matters:
 - 💬 **Keep the conversation going.** Follow-ups build on previous results, so you can narrow a population or investigate its applications.
 - 🔎 **Investigate across your directory.** Netra AI coordinates SQL, API queries, and analysis for questions that span multiple resources.
 - 🔁 **Reuse successful workflows.** When enabled, compatible saved procedures run again, with fresh orchestration if reuse fails.
-- 🏠 **Run locally. Choose your model.** Self-host the application and bring your preferred supported AI provider.
+- 🏠 **Run locally. Choose your model.** Self-host the application and use supported models, including lower-cost Flash options. Premium models are optional.
 
 **Beta:** one commercial Entra tenant per deployment. Results depend on permissions,
 licensing, data freshness, model quality, and execution limits. The sizes above
 illustrate the approach, not validated capacity: 10,000- and 50,000-user Netra AI runs
 and comparative performance have not yet been benchmarked.
 
-## What can Netra AI answer?
+## What can Netra AI answer today?
 
-Netra AI can answer questions about the following Entra entities and relationships
-through its supported read-only Graph endpoints:
+Netra AI currently supports 53 read-only Microsoft Graph operations covering the
+Entra entities and relationships below. Coverage can expand as more Graph
+endpoints are added.
 
 | Entity or area | What you can explore |
 | --- | --- |
@@ -173,6 +174,10 @@ uses `latest` for **Linux AMD64**. Prefer a local install? Follow the [uv guide]
 
 Netra AI supports OpenAI, Google AI Studio, Google Vertex AI, Anthropic, Azure OpenAI,
 AWS Bedrock, and OpenAI-compatible endpoints, including local models through Ollama.
+
+**You don't need a premium model.** Netra AI supports Flash models such as Gemini
+Flash alongside larger models. Choose a model that gives reliable answers to
+your Entra questions at a cost you're comfortable with.
 
 Set `AI_PROVIDER` and fill in that provider's section in `.env`. You can use the
 same model for reasoning and coding, or a different model for each. Model choice
