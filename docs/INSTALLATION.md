@@ -1,5 +1,9 @@
 # Installation and Entra setup
 
+For the published Docker image, follow the [README quick start](../README.md#quick-start-docker).
+The steps below cover manual installation with uv. Source builds are covered in
+the [Docker section](#docker).
+
 Use [uv](https://docs.astral.sh/uv/getting-started/installation/) and Node.js 24.
 Netra uses uv with its existing requirements files. From the repository root,
 create a Python 3.12 environment once; skip this command if `.venv` already exists:
@@ -122,13 +126,30 @@ loopback. For a public HTTPS deployment, configure the proxy and set
 
 The Docker Hub repository is
 [fctrid/netra-ai-agent-for-entra](https://hub.docker.com/r/fctrid/netra-ai-agent-for-entra).
-As of October 10, 2026, it has no published tags. Use the source build below until
-an image is published.
+The first beta image is `fctrid/netra-ai-agent-for-entra:0.1.0-beta.1` for Linux
+AMD64. The `beta` tag follows the most recently published beta; the default Compose
+file pins a version so updates are deliberate. Docker Desktop runs the Linux image
+on supported Windows and macOS hosts; this release does not publish a native ARM64 image.
 
-After configuring `.env`, run `docker compose up --build`. This builds Netra locally
-and exposes it on loopback port 8001, with named volumes for the database and chat
-artifacts. Set `INSTALL_TEAMS_BOT=true` when building a Teams-enabled image. Use
+After configuring `.env`, run `docker compose pull` and `docker compose up -d`.
+Netra is exposed on loopback port 8001, with named volumes for the database and
+chat artifacts. The published image includes the optional Teams dependencies;
+Teams remains disabled until configured and enabled. Use
 `docker compose exec netra python scripts/sync_entra_to_db.py` for a one-shot sync.
+
+To build your own image from the checked-out source:
+
+```bash
+docker compose -f docker-compose.build.yml up --build -d
+```
+
+The source build excludes Teams dependencies by default. Set `INSTALL_TEAMS_BOT=true`
+in your configuration before building if you need them. Use the same `-f
+docker-compose.build.yml` option for subsequent source-container commands.
+
+To upgrade the published image, update the pinned tag in `docker-compose.yml`,
+then run `docker compose pull` and `docker compose up -d`. Back up your data first.
+Keep the named volumes; `docker compose down -v` deletes them.
 
 ## Teams
 

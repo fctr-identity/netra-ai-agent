@@ -6,6 +6,11 @@ COPY src/frontend/ ./
 RUN npm run build
 
 FROM python:3.12-slim-bookworm
+ARG VCS_REF=unknown
+LABEL org.opencontainers.image.title="Netra - AI Agent for Microsoft Entra ID" \
+      org.opencontainers.image.version="0.1.0-beta.1" \
+      org.opencontainers.image.source="https://github.com/fctr-identity/netra-ai-agent" \
+      org.opencontainers.image.revision="${VCS_REF}"
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 COPY requirements.txt requirements-teams.txt ./

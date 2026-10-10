@@ -25,7 +25,7 @@
       <img src="./media/badges/preview.svg" alt="v0.1.0-beta.1" width="120" height="22">
     </a>
     <a href="docker-compose.yml">
-      <img src="./media/badges/docker.svg" alt="Docker: build from source" width="170" height="22">
+      <img src="./media/badges/docker.svg" alt="Docker: Linux AMD64" width="170" height="22">
     </a>
     <a href="docs/INSTALLATION.md">
       <img src="./media/badges/python.svg" alt="Python 3.12" width="88" height="22">
@@ -85,7 +85,7 @@ The initial setup assumes Entra P1. For a local installation with **uv**, follow
 [Installation and Entra setup](docs/INSTALLATION.md).
 
 Docker Hub repository: [fctrid/netra-ai-agent-for-entra](https://hub.docker.com/r/fctrid/netra-ai-agent-for-entra).
-No image tags are published yet; the steps below build from source.
+The Compose file uses the pinned **`0.1.0-beta.1`** image for **Linux AMD64**.
 
 1. Clone this repository and enter its directory:
 
@@ -114,10 +114,11 @@ No image tags are published yet; the steps below build from source.
    OPENAI_COMPATIBLE_CODING_MODEL=<model-id>
    ```
 
-4. Build and start Netra:
+4. Pull and start Netra:
 
    ```bash
-   docker compose up --build -d
+   docker compose pull
+   docker compose up -d
    docker compose logs -f netra
    ```
 
