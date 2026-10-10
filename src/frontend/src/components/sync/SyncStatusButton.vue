@@ -95,7 +95,7 @@
                                     :class="{ 'entity-count-large': entityCounts.mfa_registrations > 9999 }">
                                     {{ entityCounts.mfa_registrations ?? '—' }}
                                 </div>
-                                <div class="entity-label">MFA reports</div>
+                                <div class="entity-label">MFA registrations</div>
                             </div>
                         </div>
                     </div>

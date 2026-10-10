@@ -27,7 +27,7 @@ test('follow-up phase events reach Activity without tools or internal reasoning'
         }) }))
         for (const [phase, label] of [
             ['planning', 'Understanding your question'], ['processor', 'Processing saved results'],
-            ['review', 'Planning next step'], ['analysis', 'Analyzing saved results'],
+            ['review', 'Reviewing results'], ['analysis', 'Analyzing saved results'],
             ['reuse_search', 'Matching saved queries'], ['reuse_inspect', 'Evaluating query fit'],
             ['reuse', 'Running a saved query'],
             ['reuse_adapt', 'Adapting a saved query'],
@@ -59,19 +59,24 @@ test('follow-up phase events reach Activity without tools or internal reasoning'
                 { phase: 'sql', tools: [{ name: 'execute_test_query_sql' }] },
                 { phase: 'review', tools: [] },
                 { phase: 'api', tools: [{ name: 'load_comprehensive_api_endpoints' }] },
+                { phase: 'api', tools: [{ name: 'save_artifact', description: 'Save retrieval evidence' }] },
                 { phase: 'review', tools: [] },
                 { phase: 'synthesis', tools: [{ name: 'load_artifacts' }] },
             ],
         }) }))
         const orderedLabels = ['Understanding your question', 'Querying the database',
-            'Read database schema', 'Test database query', 'Planning next step · Database',
-            'Retrieving live data', 'Find available API endpoints', 'Planning next step · API',
-            'Preparing the answer', 'Read saved results']
-        for (let i = 1; i < orderedLabels.length; i++) {
-            assert.ok(grouped.indexOf(orderedLabels[i - 1]) < grouped.indexOf(orderedLabels[i]))
+            'Read database schema', 'Test database query', 'Reviewing results',
+            'Retrieving live data', 'Find available API endpoints', 'Save discovery evidence', 'Reviewing results',
+            'Preparing the answer', 'Read discovery evidence']
+        let previousLabelEnd = 0
+        for (const label of orderedLabels) {
+            const position = grouped.indexOf(label, previousLabelEnd)
+            assert.ok(position >= previousLabelEnd, `Missing or out-of-order activity label: ${label}`)
+            previousLabelEnd = position + label.length
         }
+        assert.doesNotMatch(grouped, /Planning next step|Save results|Read saved results|Checking retrieved evidence|Reviewing results ·/)
         assert.equal(grouped.split('Querying the database').length - 1, 1)
-        assert.match(grouped, /4 tool calls/)
+        assert.match(grouped, /5 tool calls/)
         // Unknown phase values and old prose are never rendered as public progress.
         stream.onmessage({ data: JSON.stringify({ type: 'STEP-START', phase: 'PRIVATE_UNKNOWN',
             step: 1, title: 'PRIVATE_TITLE', text: 'PRIVATE_TEXT', timestamp: 1 }) })

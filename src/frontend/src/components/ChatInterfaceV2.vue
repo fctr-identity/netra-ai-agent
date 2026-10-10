@@ -290,9 +290,13 @@
                                 @click="selectSuggestion(suggestion.query)"
                             >
                                 <v-icon :icon="suggestion.icon" size="16" class="suggestion-symbol" />
-                                <span class="suggestion-text">{{ suggestion.label }}</span>
+                                <span class="suggestion-copy">
+                                    <span class="suggestion-text">{{ suggestion.label }}</span>
+                                    <span class="suggestion-level" :class="suggestion.level.toLowerCase()">{{ suggestion.level }}</span>
+                                </span>
                             </button>
                         </div>
+                        <p class="suggestions-note">Simple: focused lookups. Advanced: compare related data and may take longer.</p>
 
                         <!-- Special Tools Button -->
                         <div class="special-tools-container">
@@ -1336,19 +1340,31 @@ const ensureAuthenticatedSession = async () => {
 // ---------- PREDEFINED CONTENT ----------
 
 /**
- * Query suggestions - curated valid questions (rearranged for varied lengths)
+ * Bounded examples adapted from the ten CLI evaluation scenarios.
+ * Levels describe the work involved, not guaranteed latency or tenant coverage.
  */
 const showAllSuggestions = ref(false)
 const suggestions = ref([
-    { label: 'Explore users', query: 'List users with their names, sign-in names and account enabled status', icon: 'mdi-account-outline' },
-    { label: 'Group membership', query: 'Find groups with more than 50 members', icon: 'mdi-account-group-outline' },
-    { label: 'Assigned apps', query: 'List enterprise apps and their assigned users and groups', icon: 'mdi-apps' },
-    { label: 'MFA registration', query: 'Which users are not registered for MFA according to the registration report?', icon: 'mdi-shield-check-outline' },
-    { label: 'Disabled accounts', query: 'Show users whose accounts are disabled', icon: 'mdi-lock-outline' },
-    { label: 'App registrations', query: 'List app registrations and their sign-in audiences', icon: 'mdi-application-outline' },
-    { label: 'Engineering team', query: 'Find direct user members of the Engineering group', icon: 'mdi-account-group-outline' },
-    { label: 'Directory roles', query: 'List current directory role assignments and their scopes', icon: 'mdi-shield-account-outline' },
-    { label: 'Failed sign-ins', query: 'List failed sign-ins in the last 24 hours', icon: 'mdi-login' }
+    { label: 'Preview up to 5 users', level: 'Simple', icon: 'mdi-account-outline',
+      query: 'Show a sample of up to five users with their display name, sign-in name and account-enabled status.' },
+    { label: 'Trace app assignments', level: 'Advanced', icon: 'mdi-account-key-outline',
+      query: 'Choose one enabled member user and compare up to ten direct and ten transitive group memberships. Inspect assignments for up to five enterprise apps and identify assignments to this user directly or through their direct groups, including app roles where available. Do not infer app access from nested groups. State the sample scope and any missing data that prevents a conclusion.' },
+    { label: 'Check MFA registration', level: 'Advanced', icon: 'mdi-shield-check-outline',
+      query: 'For up to ten enabled users, match their user details to the MFA registration report by user ID. Show name, sign-in name, whether a report row exists, and MFA registration and capability status. Treat missing report rows as unknown. Registration does not prove MFA use or enforcement.' },
+    { label: 'Explain policy scope', level: 'Advanced', icon: 'mdi-shield-lock-outline',
+      query: 'List up to five Conditional Access policies with their name and state. For the first policy, summarize included and excluded users, groups and applications, plus grant controls. Resolve names for up to five referenced objects and state which references remain unresolved. Distinguish policy scope from app assignments and effective access.' },
+    { label: 'Device inventory', level: 'Simple', icon: 'mdi-devices',
+      query: 'Show up to five directory devices with their name, operating system, enabled status, management and compliance status. For the first device, also show its approximate last sign-in time. Keep unknown values as unknown.' },
+    { label: 'Compare group membership', level: 'Advanced', icon: 'mdi-account-group-outline',
+      query: 'List up to three groups, then compare up to ten direct members and ten transitive members of the first group. Show member names and object types, and explain any nested membership visible in these samples. Do not treat sample sizes as total member counts.' },
+    { label: 'Enterprise apps', level: 'Simple', icon: 'mdi-apps',
+      query: 'List up to five enterprise applications with their names, application IDs and enabled status. For the first app, show its service-principal type and whether assignment is required. Assignment not being required does not prove that every user has access.' },
+    { label: 'App registrations', level: 'Simple', icon: 'mdi-application-outline',
+      query: 'List up to five app registrations with their name, application ID and sign-in audience. Show when the first registration was created and briefly explain how it differs from an enterprise application.' },
+    { label: 'Global Administrators', level: 'Advanced', icon: 'mdi-shield-account-outline',
+      query: 'Find the Global Administrator role and show up to ten current role assignments. Resolve user or group names where possible and include principal type and assignment scope. These results should not be presented as PIM eligibility or historical assignments.' },
+    { label: 'Recent activity', level: 'Advanced', icon: 'mdi-history',
+      query: 'Using live data for the last 24 hours, state the UTC start and end times and show up to five sign-ins and five directory audit events. Get details for the first event of each type. Summarize time, user or initiator, app or activity, status and failure reason. Keep the event types separate and distinguish no events from permission or licensing errors.' }
 ])
 const visibleSuggestions = computed(() => showAllSuggestions.value ? suggestions.value : suggestions.value.slice(0, 4))
 
@@ -2259,6 +2275,37 @@ onMounted(() => {
     line-height: 1.4;
 }
 
+.suggestion-copy {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.suggestion-level {
+    flex-shrink: 0;
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #365c7c;
+    background: #e4edf5;
+}
+
+.suggestion-level.advanced {
+    color: #645285;
+    background: #eee8f6;
+}
+
+.suggestions-note {
+    margin: 10px 0 0;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
 .suggestion-header {
     display: flex;
     align-items: center;
@@ -2985,6 +3032,7 @@ onMounted(() => {
     .content-area:not(.has-results) .query-textarea { min-height: 68px; font-size: 16px; }
     .suggestions-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .suggestion-btn { min-width: 0; padding: 10px; }
+    .suggestion-copy { flex-direction: column; align-items: flex-start; gap: 4px; }
     .suggestion-symbol { flex-shrink: 0; }
 }
 </style>

@@ -9,6 +9,8 @@ ENV
 **/.vite
 .env
 .env.*
+**/.env
+**/.env.*
 DO_NOT_SHARE
 do_not_share
 sqlite_db

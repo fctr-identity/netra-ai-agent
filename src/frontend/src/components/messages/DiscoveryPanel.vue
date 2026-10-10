@@ -96,7 +96,7 @@ const phaseLabels = {
   api: 'Retrieving live data',
   processor: 'Processing saved results',
   analysis: 'Analyzing saved results',
-  review: 'Planning next step',
+  review: 'Reviewing results',
   special: 'Running a specialized check',
   synthesis: 'Preparing the answer',
   reuse: 'Running a saved query',
@@ -114,8 +114,7 @@ const sections = computed(() => props.steps.reduce((entries, step, stepIndex) =>
   if (!phase && !stepTools.length && !step.modelRequests?.length) return entries
   let section = entries.at(-1)
   if (!section || section.phase !== phase) {
-    const source = section?.phase === 'sql' ? 'Database' : section?.phase === 'api' ? 'API' : null
-    const label = phase === 'review' && source ? `${phaseLabels.review} · ${source}` : phaseLabels[phase]
+    const label = phaseLabels[phase]
     section = { key: step.id || `phase-${stepIndex}`, phase, label, tools: [], modelRequests: [] }
     entries.push(section)
   }
@@ -153,8 +152,8 @@ const toolLabels = {
   filter_endpoints_by_operations: 'Select API endpoints',
   execute_test_query_api: 'Test API endpoints',
   execute_test_query_sql: 'Test database query',
-  load_artifacts: 'Read saved results',
-  save_artifact: 'Save results',
+  load_artifacts: 'Read discovery evidence',
+  save_artifact: 'Save discovery evidence',
 }
 const formatToolName = (name = 'Tool call') => toolLabels[name] || name.replace(/_/g, ' ').replace(/^entra /, '')
 const toolLabel = (tool) => tool.testId
@@ -163,7 +162,7 @@ const toolLabel = (tool) => tool.testId
 const toolSource = (tool) => {
   if (tool.name?.includes('sql')) return 'Database'
   if (tool.testId || /api|endpoint/.test(tool.name || '')) return 'API'
-  if (/artifact/.test(tool.name || '')) return 'Results'
+  if (/artifact/.test(tool.name || '')) return 'Evidence'
   return ''
 }
 </script>
