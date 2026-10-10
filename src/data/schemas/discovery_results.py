@@ -17,6 +17,31 @@ def _json(value):
     return json.dumps(value, separators=(',', ':'), ensure_ascii=True, default=str)
 
 
+def discovery_result_status(value):
+    """Describe returned evidence, including nested client errors and sample caps."""
+    def inspect(item):
+        if isinstance(item, dict):
+            if item.get('status') == 'error' or item.get('error'):
+                return False, True, False
+            if item.get('status') == 'success' and 'data' in item:
+                data, error, partial = inspect(item['data'])
+                return data, error, partial or item.get('complete') is False
+            children = item.values()
+        elif isinstance(item, list):
+            children = item
+        else:
+            return item is not None and item != '', False, False
+        states = [inspect(child) for child in children]
+        return tuple(any(state[i] for state in states) for i in range(3))
+
+    data, error, partial = inspect(value)
+    if error:
+        return 'partial' if data else 'error'
+    if partial:
+        return 'partial'
+    return 'available' if data else 'empty'
+
+
 def result_preview(value, budget=4000):
     """Return valid JSON, allocating space across sections instead of slicing text.
 
@@ -62,7 +87,6 @@ class DiscoveryResults:
         self._directory = tempfile.TemporaryDirectory(prefix='api-tests-', dir=artifacts_file.parent)
         self.directory = Path(self._directory.name)
         self._ids = set()
-        self.saved = {}
 
     def put(self, test_id, code, result):
         if not _TEST_ID.fullmatch(test_id):
