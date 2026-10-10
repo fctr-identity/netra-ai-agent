@@ -73,11 +73,12 @@ this approach reduces context usage as datasets grow. Netra AI packages it with 
 web UI, follow-ups, and exports in one application. Here's why that matters:
 
 - 📊 **Fewer tokens. Lower AI costs.** Netra AI processes bulk data in code and sends compact previews to the model, reducing input-token costs compared with passing every retrieved record into context. Saved results remain available for tables and CSV exports.
+- 💰 **Premium models aren't required.** Use lower-cost Flash models such as Gemini Flash to keep model costs down.
 - ⚡ **Fast SQL plus live Graph access.** Optional SQLite snapshots speed up repeat questions, while live APIs provide fresh or additional data.
 - 💬 **Keep the conversation going.** Follow-ups build on previous results, so you can narrow a population or investigate its applications.
 - 🔎 **Investigate across your directory.** Netra AI coordinates SQL, API queries, and analysis for questions that span multiple resources.
 - 🔁 **Reuse successful workflows.** When enabled, compatible saved procedures run again, with fresh orchestration if reuse fails.
-- 🏠 **Run locally. Choose your model.** Self-host the application and use supported models, including lower-cost Flash options. Premium models are optional.
+- 🏠 **Run locally. Choose your model.** Self-host the application and use your preferred supported AI provider.
 
 **Beta:** one commercial Entra tenant per deployment. Results depend on permissions,
 licensing, data freshness, model quality, and execution limits. The sizes above
