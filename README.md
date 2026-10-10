@@ -13,7 +13,7 @@
     <a href="#from-a-question-to-an-investigation">Demo</a> ·
     <a href="#try-these-questions">Example questions</a> ·
     <a href="#why-netra">Why Netra</a> ·
-    <a href="#ai-providers">AI providers</a> ·
+    <a href="#ai-provider-support">AI providers</a> ·
     <a href="#microsoft-teams">Teams</a> ·
     <a href="#documentation">Docs</a> ·
     <a href="#community-and-support">Support</a>
@@ -39,9 +39,13 @@ Microsoft Entra ID. Ask about users, groups, applications, devices, and access i
 plain English, then explore the answers, ask follow-ups, and export the results.
 
 Netra is a **source-available AI agent (currently supporting [read-only endpoints](docs/SUPPORTED_GRAPH_READS.md))**,
-with a web UI, CLI, and optional Microsoft Teams integration. It uses the same
-agent harness as [Tako AI Agent for Okta](https://github.com/fctr-id/okta-ai-agent),
-adapted for Microsoft Entra ID.
+with a web UI, CLI, and optional Microsoft Teams integration.
+
+**Built on the same agent harness as [Tako AI Agent for Okta](https://github.com/fctr-id/okta-ai-agent).**
+Netra brings Tako's multi-agent orchestration, conversational UI, and combined
+database and live-API approach to Microsoft Entra ID. The shared foundation powers
+the workflow; Netra adapts the directory schema, API catalog, and prompts for
+Microsoft Graph and Entra administration.
 
 ## From a question to an investigation
 
@@ -124,12 +128,35 @@ uses `latest` for **Linux AMD64**. Prefer a local install? Follow the [uv guide]
    your local admin account. Ask a live question immediately, or select
    **Data sync → Sync now** to prepare the optional database for faster queries.
 
-## AI providers
+## AI Provider Support
 
-Use OpenAI, Google AI Studio or Vertex AI, Anthropic, Azure OpenAI, AWS Bedrock,
-or OpenAI-compatible endpoints, including Ollama. Use one model or separate reasoning
-and coding models. See the [provider and model guide](docs/AI_PROVIDERS.md)
-for configuration links and the shared harness's model reference list.
+Netra supports OpenAI, Google AI Studio, Google Vertex AI, Anthropic, Azure OpenAI,
+AWS Bedrock, and OpenAI-compatible endpoints, including local models through Ollama.
+
+Set `AI_PROVIDER` and fill in that provider's section in `.env`. You can use the
+same model for reasoning and coding, or a different model for each. Model choice
+affects answer quality, speed, and cost. See the [configuration guide](docs/INSTALLATION.md#ai-provider-configuration).
+
+### Models
+
+| Provider | Model |
+| --- | --- |
+| DeepSeek | DeepSeek V4.1 Flash |
+| Z.ai | GLM 5.3 |
+| Google | Gemini 3.8 Flash |
+| OpenAI | GPT-5.6 Terra |
+| Anthropic | Claude Haiku 5.5 |
+
+DeepSeek and Z.ai connect through `openai_compatible`. Try your chosen model with
+representative Entra questions first. Smaller, older, or untested models may give
+less reliable answers. See the [provider and model guide](docs/AI_PROVIDERS.md) for context.
+
+### Reasoning setting
+
+Optionally set `AI_REASONING_EFFORT=high` to request more reasoning; this can make
+answers slower and more expensive. If your model does not support the setting,
+use `AI_REASONING_EFFORT=none` or leave it unset, then restart Netra. Both leave
+the model's defaults intact; some models still reason by default.
 
 ## Microsoft Teams
 

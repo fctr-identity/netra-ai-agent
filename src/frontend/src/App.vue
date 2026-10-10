@@ -16,7 +16,7 @@
 
 <script setup>
 import { onMounted } from 'vue'
-import fctrLogo from './assets/fctr-wordmark-primary.svg'
+import fctrLogo from './assets/fctr-lockup-primary.png'
 
 onMounted(() => {
   // Preload key assets

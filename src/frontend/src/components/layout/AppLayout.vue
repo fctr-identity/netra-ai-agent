@@ -5,7 +5,7 @@
             <div class="header-content">
                 <!-- Brand section: Fctr lockup + Netra AI Agent -->
                 <div class="brand">
-                    <img src="@/assets/fctr-lockup-primary.svg" alt="Fctr" />
+                    <img src="@/assets/fctr-lockup-primary.png" alt="Fctr" />
                     
                     <div class="brand-divider"></div>
                     <div class="title-with-badge">
@@ -183,8 +183,8 @@ const handleNewSession = () => {
 
 .brand img {
     display: block;
-    height: 16px;
-    width: 54.4px;
+    height: 20px;
+    width: auto;
     flex-shrink: 0;
     object-fit: contain;
     transform: translateY(-1px);

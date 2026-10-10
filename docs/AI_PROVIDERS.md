@@ -9,12 +9,13 @@ the [installation guide](INSTALLATION.md#ai-provider-configuration) and
 model or different models. Choose models that support structured tool calls;
 answer quality, speed, and cost vary by model.
 
-## Model reference from Tako
+## Model reference
 
-The following reference list was carried over from
+This list builds on
 [Tako's AI provider guide](https://github.com/fctr-id/okta-ai-agent#ai-provider-support)
-for the shared agent harness. It reflects Tako testing, not a separate Netra
-compatibility certification or a guarantee of current provider availability.
+for the shared agent harness, with Netra's selected model updates. It is not a
+separate Netra compatibility certification or a guarantee of current provider
+availability.
 
 | Provider | Model |
 | --- | --- |
@@ -22,12 +23,25 @@ compatibility certification or a guarantee of current provider availability.
 | Z.ai | GLM 5.3 |
 | Google | Gemini 3.8 Flash |
 | OpenAI | GPT-5.6 Terra |
-| Anthropic | Claude Haiku 4.5 |
+| Anthropic | Claude Haiku 5.5 |
 
 DeepSeek and Z.ai connect through `openai_compatible`. Use the model identifier
 provided by your chosen service and test representative Entra questions before
 relying on its results. Smaller, older, or untested models may give less reliable
 answers.
+
+## Reasoning setting
+
+`AI_REASONING_EFFORT` optionally requests a shared reasoning setting for the
+agents. Netra accepts `minimal`, `low`, `medium`, `high`, `xhigh`, `true`, `false`,
+and `none`; support for individual values depends on the provider and model.
+Higher effort can increase response time and cost.
+
+The sample configuration leaves this unset. To request more reasoning, add
+`AI_REASONING_EFFORT=high` to your configuration and restart Netra. If the model
+rejects it, use `none` or remove the setting and restart. An unset, blank, or
+`none` value sends no reasoning override; it does not disable a model's default
+reasoning. Use only settings supported by your chosen provider and model.
 
 ## Data sent to the model
 
