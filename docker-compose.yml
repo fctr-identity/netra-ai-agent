@@ -1,6 +1,6 @@
 services:
   netra:
-    image: fctrid/netra-ai-agent-for-entra:0.1.0-beta.1
+    image: fctrid/netra-ai-agent-for-entra:latest
     ports:
       - "127.0.0.1:8001:8001"
     env_file: .env

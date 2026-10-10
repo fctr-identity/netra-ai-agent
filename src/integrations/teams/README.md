@@ -11,10 +11,11 @@ opt-in and has not yet been validated against a live customer Teams tenant.
 
 ## Install and configure
 
-1. Install the normal application dependencies, then
-   `python -m pip install -r requirements-teams.txt`. The integration uses Microsoft
-   Teams SDK for Python 2.1.0. For Docker, build with
-   `docker build --build-arg INSTALL_TEAMS_BOT=true -t netra-teams .`.
+1. For manual installation, run
+   `uv pip install -r requirements.txt -r requirements-teams.txt` from the repository
+   root. The integration uses Microsoft Teams SDK for Python 2.1.0. The published
+   Netra Docker image includes these dependencies. For a custom Docker source build,
+   use `docker build --build-arg INSTALL_TEAMS_BOT=true -t netra-teams .`.
 2. Create a **single-tenant Entra app registration** and matching Azure Bot. Use the app/client GUID, not the Enterprise
    application's object ID. Set the messaging endpoint to
    `https://your-public-netra-host/teams/messages` behind a trusted HTTPS proxy.

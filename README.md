@@ -16,8 +16,9 @@
     <a href="#try-these-questions">Example questions</a> ·
     <a href="#why-netra">Why Netra</a> ·
     <a href="#ai-providers">AI providers</a> ·
+    <a href="#microsoft-teams">Teams</a> ·
     <a href="#documentation">Docs</a> ·
-    <a href="#support-and-contributing">Support</a>
+    <a href="#support">Support</a>
   </p>
 
   <p>
@@ -85,7 +86,8 @@ The initial setup assumes Entra P1. For a local installation with **uv**, follow
 [Installation and Entra setup](docs/INSTALLATION.md).
 
 Docker Hub repository: [fctrid/netra-ai-agent-for-entra](https://hub.docker.com/r/fctrid/netra-ai-agent-for-entra).
-The Compose file uses the pinned **`0.1.0-beta.1`** image for **Linux AMD64**.
+The Compose file uses **`latest`**, currently **`0.1.0-beta.1`**, for **Linux AMD64**.
+To stay on this release, replace `latest` with `0.1.0-beta.1` in the Compose file.
 
 1. Clone this repository and enter its directory:
 
@@ -171,7 +173,7 @@ See [installation](docs/INSTALLATION.md) and [`.env.example`](.env.example) for
 configuration. Prompts and selected directory context go to your configured model
 provider, even when Netra itself runs locally.
 
-## CLI and Teams
+## CLI
 
 Run a query or refresh the database from the terminal:
 
@@ -180,8 +182,58 @@ uv run scripts/netra-cli.py "List enabled users in Engineering"
 uv run scripts/sync_entra_to_db.py
 ```
 
-See the [CLI and scheduling guide](docs/DATA_SYNC.md). Optional
-[Teams personal chat](src/integrations/teams/README.md) uses the same query runtime.
+See the [CLI and scheduling guide](docs/DATA_SYNC.md) for exports and scheduled sync.
+
+## Microsoft Teams
+
+Ask Entra questions in a **personal Teams chat**, continue with follow-ups, and
+download results as CSV. Access is restricted to your tenant and members of the
+Entra groups you allow.
+
+Teams is optional and disabled by default. The Docker image includes its
+dependencies. For a manual installation, install them with:
+
+```bash
+uv pip install -r requirements.txt -r requirements-teams.txt
+```
+
+Follow the [Teams setup guide](src/integrations/teams/README.md) to configure the
+bot identity, public HTTPS messaging endpoint, Teams channel, and group allowlist.
+Then build the Teams app package:
+
+```bash
+uv run scripts/build_teams_package.py
+```
+
+Enter the bot's Entra **Application (client) ID** when prompted, then upload the
+generated ZIP to Teams. The guide covers configuration and validation; live Teams
+delivery has not yet been validated for this beta.
+
+## Security and privacy
+
+- **Read-only Graph access.** Grant the application permissions needed for the data you query.
+- **Local storage.** Synced data, conversations, and saved results stay on your infrastructure.
+- **Your model provider.** Prompts and selected directory data go to the provider you configure. A compatible local model keeps inference on your infrastructure.
+- **Controlled access.** First-run setup requires a one-time token; Teams requires tenant and group authorization.
+
+See [runtime and data](docs/RUNTIME_AND_DATA.md) for execution controls, retention,
+and limitations. Generated-code checks are not an operating-system sandbox.
+
+## Upgrading
+
+Back up your database and conversation volumes, review [release notes](VERSION.md),
+then pull the latest image and recreate the container:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+Keep the existing named volumes to preserve accounts and saved data. Compare new
+settings in [`.env.example`](.env.example) with your configuration without
+overwriting your credentials. Without a persistent `JWT_SECRET_KEY`, restarting
+requires signing in again. See the [installation guide](docs/INSTALLATION.md#docker)
+for version pinning and source builds.
 
 ## Documentation
 
@@ -191,21 +243,41 @@ See the [CLI and scheduling guide](docs/DATA_SYNC.md). Optional
 | [Data sync and CLI](docs/DATA_SYNC.md) | Synced fields, optional datasets, custom attributes, scheduling, and exports. |
 | [Question library](docs/QUESTION_LIBRARY.md) | Simple and advanced administrator questions. |
 | [Supported Graph endpoints](docs/SUPPORTED_GRAPH_READS.md) | All 53 supported GET operations, permissions, and coverage. |
+| [Microsoft Teams](src/integrations/teams/README.md) | Bot setup, allowed groups, app package, and validation. |
 | [Runtime and data](docs/RUNTIME_AND_DATA.md) | Execution controls, local storage, retention, progress, and limitations. |
 | [Development](docs/DEVELOPMENT.md) | Checks and catalog maintenance. |
+| [Release notes](VERSION.md) | Current version and beta scope. |
 
 The [documentation hub](docs/README.md) also links to the Teams and coverage guides.
 The [GitHub Wiki](https://github.com/fctr-identity/netra-ai-agent/wiki) is enabled;
 its landing page is being prepared.
 
-## Support and contributing
+## Support
 
-Report bugs or suggest improvements through [GitHub Issues](https://github.com/fctr-identity/netra-ai-agent/issues).
-Include reproduction steps and redacted errors; keep credentials and tenant data
-out of reports. See the [development guide](docs/DEVELOPMENT.md) to contribute.
+Check your configuration, Graph permissions, AI provider settings, and application
+logs first. When reporting a problem, include the Netra version, reproduction
+steps, and redacted errors. Keep credentials and tenant data out of reports.
+
+- 🐛 [GitHub Issues](https://github.com/fctr-identity/netra-ai-agent/issues) — Bugs and feature requests.
+- 📧 [support@fctr.io](mailto:support@fctr.io) — General support.
+
+## Contributing
+
+Contributions are welcome: improve documentation, suggest administrator questions,
+report bugs, or help extend Graph coverage. Start with an issue to discuss larger
+changes and use the [development guide](docs/DEVELOPMENT.md) for relevant checks.
+
+## Contributors
+
+Thanks to the [Netra contributors](https://github.com/fctr-identity/netra-ai-agent/graphs/contributors)
+and the [Tako project](https://github.com/fctr-id/okta-ai-agent) behind the shared agent harness.
 
 ## License and attribution
 
 Netra shares its agent harness with Fctr's [Tako AI Agent](https://github.com/fctr-id/okta-ai-agent).
 See [LICENSE](LICENSE) for the current terms
 and [third-party notices](THIRD_PARTY_NOTICES.md) for Microsoft metadata attribution.
+
+---
+
+Made with ❤️ by [Fctr Identity](https://fctr.io) for the Microsoft Entra community.

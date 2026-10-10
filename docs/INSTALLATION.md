@@ -134,8 +134,9 @@ loopback. For a public HTTPS deployment, configure the proxy and set
 The Docker Hub repository is
 [fctrid/netra-ai-agent-for-entra](https://hub.docker.com/r/fctrid/netra-ai-agent-for-entra).
 The first beta image is `fctrid/netra-ai-agent-for-entra:0.1.0-beta.1` for Linux
-AMD64. The `beta` tag follows the most recently published beta; the default Compose
-file pins a version so updates are deliberate. Docker Desktop runs the Linux image
+AMD64. The default Compose file uses `latest`, which currently points to this beta.
+The `beta` tag also follows beta releases. Replace `latest` with `0.1.0-beta.1`
+to pin this version. Docker Desktop runs the Linux image
 on supported Windows and macOS hosts; this release does not publish a native ARM64 image.
 
 After configuring `.env`, run `docker compose pull` and `docker compose up -d`.
@@ -154,8 +155,8 @@ The source build excludes Teams dependencies by default. Set `INSTALL_TEAMS_BOT=
 in your configuration before building if you need them. Use the same
 `-f docker-compose.build.yml` option for subsequent source-container commands.
 
-To upgrade the published image, update the pinned tag in `docker-compose.yml`,
-then run `docker compose pull` and `docker compose up -d`. Back up your data first.
+To upgrade the published image, run `docker compose pull` and `docker compose up -d`.
+If you pinned a version, update its tag in `docker-compose.yml` first. Back up your data.
 Keep the named volumes; `docker compose down -v` deletes them.
 
 ## Teams
