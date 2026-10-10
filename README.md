@@ -11,6 +11,7 @@
   <p>
     <a href="#quick-start-docker">Quick start</a> ·
     <a href="#from-a-question-to-an-investigation">Demo</a> ·
+    <a href="#what-can-netra-ai-answer">Coverage</a> ·
     <a href="#try-these-questions">Example questions</a> ·
     <a href="#why-netra-ai">Why Netra AI</a> ·
     <a href="#ai-provider-support">AI providers</a> ·
@@ -83,6 +84,30 @@ web UI, follow-ups, and exports in one application. Here's why that matters:
 licensing, data freshness, model quality, and execution limits. The sizes above
 illustrate the approach, not validated capacity: 10,000- and 50,000-user Netra AI runs
 and comparative performance have not yet been benchmarked.
+
+## What can Netra AI answer?
+
+Netra AI can answer questions about the following Entra entities and relationships
+through its supported read-only Graph endpoints:
+
+| Entity or area | What you can explore |
+| --- | --- |
+| Users | Members and guests, profile attributes, enabled status, direct reports, and group memberships. |
+| Groups | Group details, owners, direct and nested membership, and parent groups. |
+| Applications | Enterprise apps (service principals), app registrations, and their owners. |
+| App assignments and consent | User and group app-role assignments, application permissions granted to service principals, and delegated consent grants. |
+| Devices | Entra device details, enabled status, operating systems, registered owners, and registered users. |
+| MFA registrations and authentication methods | MFA registration and capability reports, plus registered methods for an individual user. |
+| Conditional Access | Policy state, conditions, controls, named locations, and authentication strengths. |
+| Authentication-method policy | Tenant method configuration, target groups, and registration enforcement. |
+| Directory roles | Role definitions, current assignments, assigned principals, and scopes. |
+| Sign-in and audit logs | Retained sign-in events and directory changes within a requested time window. |
+| Administrative units | Unit details and direct members. |
+| Tenant, domains, and licenses | Organization details, domain settings, subscribed license SKUs, service plans, and consumed license counts. |
+
+Coverage depends on your app permissions, Entra licensing, and available data.
+See the [full endpoint list](docs/SUPPORTED_GRAPH_READS.md) for supported operations
+and requirements, or [what syncs to SQLite](docs/DATA_SYNC.md#what-netra-ai-syncs) for database coverage.
 
 ## Try these questions
 
