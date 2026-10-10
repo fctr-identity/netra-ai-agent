@@ -2,12 +2,47 @@
 import json
 import re
 import unittest
-from tests import ROOT
+from unittest.mock import AsyncMock, patch
+from tests import CHECKS, ROOT
 
 from src.core.entra.client.graph_client import EntraAPIClient, catalog, operation_for
 
 
 class ExpandedCatalogChecks(unittest.IsolatedAsyncioTestCase):
+    async def test_constructed_detail_endpoint_reaches_runtime_validation(self):
+        from src.core.agents.api_discovery_agent import APIDiscoveryDeps, create_api_toolset
+
+        code = '''async def read_detail():
+    sign_in_id = "fixture-id"
+    return await entra_client.make_request(endpoint="/auditLogs/signIns/" + sign_in_id, method="GET")
+result = await read_detail()
+'''
+        calls = []
+        async def page(url, headers):
+            calls.append(url)
+            return {'id': 'fixture-id'}
+
+        async def offline_worker(kind, payload, **kwargs):
+            self.assertEqual(kind, 'api')
+            client = EntraAPIClient(page_reader=page)
+            namespace = {'entra_client': client}
+            try:
+                import ast
+                compiled = compile(payload['code'], '<offline-detail>', 'exec',
+                                   flags=ast.PyCF_ALLOW_TOP_LEVEL_AWAIT)
+                await eval(compiled, namespace)
+                return namespace['result']
+            finally:
+                await client.close_session()
+
+        deps = APIDiscoveryDeps(correlation_id='offline-detail', artifacts_file=CHECKS / 'unused.json')
+        tool = create_api_toolset(deps).tools['execute_test_query']
+        with patch('src.core.process_runner.run_worker', new=AsyncMock(side_effect=offline_worker)):
+            result = await tool.function(code)
+        self.assertTrue(result.metadata['success'])
+        self.assertEqual(json.loads(result.content)['status'], 'success')
+        self.assertEqual(calls, ['https://graph.microsoft.com/v1.0/auditLogs/signIns/fixture-id'])
+
     def test_routing_provenance_and_published_inventory_agree(self):
         entries = catalog()
         index = json.loads((ROOT / 'src/data/schemas/graph_read_operations.json').read_text())['operations']

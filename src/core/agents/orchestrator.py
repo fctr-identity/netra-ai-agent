@@ -459,11 +459,20 @@ def _apply_followup_supervisor_decision(
     return "STOP"
 
 
-def _merge_supervisor_evidence_into_delegation(
+def _merge_supervisor_followup_into_delegation(
     delegation: DelegationResult,
     decision: SupervisorDecision,
 ) -> None:
-    """Preserve supervisor-selected evidence refs for deterministic follow-up steps."""
+    """Preserve the next task separately from the completed specialist's report."""
+    if decision.mode == "delegate":
+        delegation.metadata = {
+            **(delegation.metadata or {}),
+            "supervisor_followup": {
+                "target": decision.target.lower(),
+                "requested_data": list(decision.requested_data or [decision.reasoning]),
+            },
+        }
+
     if decision.target not in {"PROCESSOR", "RESULT_ANALYSIS"}:
         return
 
@@ -552,6 +561,9 @@ def _artifact_category_has_only_empty_results(artifacts_file: Path, category: st
 
 def _delegation_requirements(delegation: DelegationResult, fallback: str) -> List[str]:
     """Return neutral unresolved requirements for the next specialist run."""
+    followup = (delegation.metadata or {}).get("supervisor_followup", {})
+    if followup.get("target") == fallback and followup.get("requested_data"):
+        return list(followup["requested_data"])
     return list(delegation.unresolved_requirements or [fallback])
 
 
@@ -1185,7 +1197,7 @@ async def _ask_supervisor_after_delegation(
     result.supervisor_decisions.append(supervisor_decision.model_dump())
     _add_usage_to_result(result, supervisor_usage)
 
-    _merge_supervisor_evidence_into_delegation(latest_delegation, supervisor_decision)
+    _merge_supervisor_followup_into_delegation(latest_delegation, supervisor_decision)
 
     return _apply_followup_supervisor_decision(result, supervisor_decision)
 

@@ -21,12 +21,10 @@ from pathlib import Path
 import json
 import time
 import asyncio
-import re
 from uuid import uuid4
 
 from src.utils.logging import get_logger
 from src.utils.security_config import validate_generated_code
-from src.core.security.graph_network import validate_request
 from src.core.agents.api_test_progress import response_diagnostics
 from src.core.agents.agent_callbacks import (
     notify_progress_to_user,
@@ -486,24 +484,9 @@ def create_api_toolset(deps: APIDiscoveryDeps) -> FunctionToolset:
                 metadata={'success': False, 'security_error': True}
             )
         
-        # SECURITY VALIDATION: Check network requests for unauthorized domains
-        endpoint_match = re.search(r'endpoint\s*=\s*["\']([^"\']+)["\']', code)
-        if endpoint_match:
-            endpoint = endpoint_match.group(1)
-            # Skip validation for special tools (they have their own security)
-            if not endpoint.startswith("/special-tools/"):
-                # Build full URL for validation
-                full_url = endpoint
-                network_validation = validate_request('GET', full_url)
-                if not network_validation.is_allowed:
-                    logger.warning(f"[{deps.correlation_id}] Network security validation failed: {network_validation.blocked_reason}")
-                    # NOTE: Don't notify_step_end for tool failures - let LLM adjust endpoint
-                    return ToolReturn(
-                        return_value=f"❌ Network security validation failed",
-                        content=f"❌ NETWORK SECURITY FAILED: {network_validation.blocked_reason}",
-                        metadata={'success': False, 'security_error': True, 'violations': network_validation.violations}
-                    )
-        
+        # The worker's Graph client validates every resolved endpoint, method and
+        # continuation URL. A regex here would mistake a constructed path's
+        # literal prefix for the complete endpoint and reject valid detail reads.
         # Generated discovery runs in a terminable local child, not the service loop.
         try:
             from src.core.process_runner import run_worker, WORKER_EVENT
