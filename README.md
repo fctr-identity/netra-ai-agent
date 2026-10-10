@@ -136,12 +136,16 @@ uses `latest` for **Linux AMD64**. Prefer a local install? Follow the [uv guide]
    matching Enterprise Application automatically; no redirect URI is needed.
 2. **[Assign Graph permissions](docs/INSTALLATION.md#graph-permissions-and-admin-consent).**
    Add the required read-only application permissions and grant admin consent.
-3. **Get the Docker configuration.** Clone the beta release:
+3. **Download the Docker configuration.** Only two files are needed:
 
    ```bash
-   git clone --branch v0.1.0-beta.3 https://github.com/fctr-identity/netra-ai-agent.git
+   mkdir netra-ai-agent
    cd netra-ai-agent
+   curl -fL -o docker-compose.yml https://raw.githubusercontent.com/fctr-identity/netra-ai-agent/v0.1.0-beta.3/docker-compose.yml
+   curl -fL -o .env.example https://raw.githubusercontent.com/fctr-identity/netra-ai-agent/v0.1.0-beta.3/.env.example
    ```
+
+   In Windows PowerShell, use `curl.exe` instead of `curl`.
 
 4. **Configure credentials and AI.** Copy [`.env.example`](.env.example) to `.env`
    if one does not already exist. Add your [Entra credentials](docs/INSTALLATION.md#entra-credentials)

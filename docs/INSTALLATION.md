@@ -148,6 +148,9 @@ loopback. For a public HTTPS deployment, configure the proxy and set
 
 The Docker Hub repository is
 [fctrid/netra-ai-agent-for-entra](https://hub.docker.com/r/fctrid/netra-ai-agent-for-entra).
+No source checkout is needed for the published image. Download `docker-compose.yml`
+and `.env.example` using the [README quick start](../README.md#quick-start-docker).
+
 The current beta image is `fctrid/netra-ai-agent-for-entra:0.1.0-beta.3` for Linux
 AMD64. The default Compose file uses `latest`, which currently points to this beta.
 The `beta` tag also follows beta releases. Replace `latest` with `0.1.0-beta.3`
