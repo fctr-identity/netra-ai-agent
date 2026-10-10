@@ -19,10 +19,10 @@ optional Teams dependencies; live Teams delivery remains unvalidated.
 Released October 10, 2026. Docker: `fctrid/netra-ai-agent-for-entra:0.1.0-beta.2`
 (Linux AMD64). Superseded by `0.1.0-beta.3`; the versioned image remains available.
 
-- Updated Fctr portal branding, browser icons, and Netra AI display names.
+- Updated [Fctr](https://fctr.io) portal branding, browser icons, and Netra AI display names.
 - Removed the unused Special Tools button, dialog, and startup request from the chat UI.
 - Clearer README, ordered Quick Start, AI provider guidance, and Teams setup.
-- Fctr Source-Available License 1.0 and private security-reporting instructions.
+- [Fctr](https://fctr.io) Source-Available License 1.0 and private security-reporting instructions.
 - Corrected Teams package website, privacy, and license links.
 - The portal version now falls back to its package version when no build override is set.
 

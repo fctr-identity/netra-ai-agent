@@ -5,7 +5,10 @@
             <div class="header-content">
                 <!-- Brand section: Fctr lockup + Netra AI -->
                 <div class="brand">
-                    <img src="@/assets/fctr-lockup-primary.png" alt="Fctr" />
+                    <a href="https://fctr.io" target="_blank" rel="noopener" class="brand-home-link"
+                        aria-label="Fctr website (opens in a new tab)">
+                        <img src="@/assets/fctr-lockup-primary.png" alt="Fctr" />
+                    </a>
                     
                     <div class="brand-divider"></div>
                     <div class="title-with-badge">
@@ -41,7 +44,7 @@
             <footer class="page-footer">
             <div class="footer-content">
                 <span>Powered by </span>
-                <a href="https://fctr.io" target="_blank" class="branded-link">
+                <a href="https://fctr.io" target="_blank" rel="noopener" class="branded-link">
                     fctr
                 </a>
                 <span class="version-tag">{{ appVersion }}</span>
@@ -180,6 +183,12 @@ const handleNewSession = () => {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+.brand-home-link {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
 }
 
 .brand img {

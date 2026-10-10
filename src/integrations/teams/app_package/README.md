@@ -1,7 +1,7 @@
 # Build the Netra AI Teams package
 
 This folder contains everything needed to build the installation ZIP: the Python
-builder, manifest template, and Fctr icons. It can be copied independently of the
+builder, manifest template, and [Fctr](https://fctr.io) icons. It can be copied independently of the
 Netra AI server. Python 3.10 or newer is sufficient; no package installation, virtual
 environment, network access, or secrets are needed to build the ZIP.
 
@@ -49,7 +49,7 @@ the manifest's `version` in the template for a new package release. Rebuilding f
 the same client ID replaces its previous output ZIP.
 
 `color.png` is 192×192; `outline.png` is white on transparency at 32×32. Their SVG
-sources are included and derived from the repository's existing Fctr fingerprint
+sources are included and derived from the repository's existing [Fctr](https://fctr.io) fingerprint
 logo. The ZIP contains only `manifest.json`, `color.png`, and `outline.png`.
 
 Building the package does not create Azure resources or configure Netra AI. Follow

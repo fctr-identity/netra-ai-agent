@@ -30,7 +30,7 @@
       <img src="./media/badges/python.svg" alt="Python 3.12" width="88" height="22">
     </a>
   </p>
-  <p>Built by the Fctr Identity team · Not affiliated with Microsoft</p>
+  <p>Built by the <a href="https://fctr.io">Fctr Identity team</a> · Not affiliated with Microsoft</p>
 </div>
 
 ---
@@ -256,7 +256,7 @@ Report suspected vulnerabilities privately through the [security policy](.github
 
 ## License
 
-[Fctr Source-Available License 1.0](LICENSE): personal and internal organizational
+[Fctr](https://fctr.io) [Source-Available License 1.0](LICENSE): personal and internal organizational
 use is free. Resale, paid derived products, and hosted, SaaS, MSP, or multi-tenant
 service offerings require a separate commercial license. See the full terms and
 [third-party notices](THIRD_PARTY_NOTICES.md).

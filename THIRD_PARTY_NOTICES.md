@@ -1,7 +1,7 @@
 # Third-party notices
 
-Netra AI includes modified code originally developed for Fctr's Tako AI Agent.
-Copyright © 2025–2026 Fctr. Netra AI's Fctr-licensed code is governed by LICENSE.
+Netra AI includes modified code originally developed for [Fctr](https://fctr.io)'s Tako AI Agent.
+Copyright © 2025–2026 [Fctr](https://fctr.io). Netra AI's [Fctr](https://fctr.io)-licensed code is governed by LICENSE.
 Separately licensed third-party material remains under its own license; Netra AI's
 license does not replace those terms or revoke rights previously granted.
 
