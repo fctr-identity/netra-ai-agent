@@ -9,7 +9,7 @@ small and large tenant scenarios; enterprise-scale performance is not yet establ
 
 ## Start here
 
-- [Docker image](https://hub.docker.com/r/fctrid/netra-ai-agent-for-entra) (`0.1.0-beta.1`, Linux AMD64)
+- [Docker image](https://hub.docker.com/r/fctrid/netra-ai-agent-for-entra) (`0.1.0-beta.2`, Linux AMD64)
 - [Install Netra AI with uv or Docker](https://github.com/fctr-identity/netra-ai-agent/blob/main/docs/INSTALLATION.md)
 - [Register the Entra app and configure read permissions](https://github.com/fctr-identity/netra-ai-agent/blob/main/docs/INSTALLATION.md#entra-app-registration)
 - [See synced datasets and fields](https://github.com/fctr-identity/netra-ai-agent/blob/main/docs/DATA_SYNC.md#what-netra-ai-syncs)

@@ -1,4 +1,22 @@
-# Netra AI v0.1.0-beta.1
+# Netra AI v0.1.0-beta.2
+
+Released October 10, 2026. Docker: `fctrid/netra-ai-agent-for-entra:0.1.0-beta.2`
+(Linux AMD64). The `beta` and `latest` tags follow this release.
+
+- Updated Fctr portal branding, browser icons, and Netra AI display names.
+- Clearer README, ordered Quick Start, AI provider guidance, and Teams setup.
+- Fctr Source-Available License 1.0 and private security-reporting instructions.
+- Corrected Teams package website, privacy, and license links.
+- The portal version now falls back to its package version when no build override is set.
+
+The published image includes the optional Teams dependencies; Teams remains
+disabled until configured. Live Teams delivery and large-tenant capacity remain
+unvalidated for this beta. See the [installation guide](docs/INSTALLATION.md#upgrading)
+for upgrade steps and the [license](LICENSE) for the terms of this release.
+
+The previous `0.1.0-beta.1` image and Git tag remain unchanged.
+
+## v0.1.0-beta.1
 
 First beta for Microsoft Entra ID, built on the same agent harness as Tako AI Agent.
 

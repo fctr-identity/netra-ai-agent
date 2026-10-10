@@ -20,7 +20,7 @@
   </p>
   <p>
     <a href="VERSION.md">
-      <img src="./media/badges/preview.svg" alt="v0.1.0-beta.1" width="120" height="22">
+      <img src="./media/badges/preview.svg" alt="v0.1.0-beta.2" width="120" height="22">
     </a>
     <a href="docker-compose.yml">
       <img src="./media/badges/docker.svg" alt="Docker: Linux AMD64" width="170" height="22">
@@ -113,7 +113,7 @@ uses `latest` for **Linux AMD64**. Prefer a local install? Follow the [uv guide]
 3. **Get the Docker configuration.** Clone the beta release:
 
    ```bash
-   git clone --branch v0.1.0-beta.1 https://github.com/fctr-identity/netra-ai-agent.git
+   git clone --branch v0.1.0-beta.2 https://github.com/fctr-identity/netra-ai-agent.git
    cd netra-ai-agent
    ```
 

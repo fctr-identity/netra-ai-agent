@@ -67,6 +67,7 @@ import { useRouter } from 'vue-router'
 import { computed, ref, provide } from 'vue'
 import SyncStatusButton from '@/components/sync/SyncStatusButton.vue'
 import HistorySidebar from './HistorySidebar.vue'
+import { version as packageVersion } from '../../../package.json'
 
 const props = defineProps({
     showHeader: {
@@ -100,7 +101,7 @@ defineExpose({
 
 const appVersion = computed(() => {
     const version = import.meta.env.VITE_APP_VERSION
-    return version ? `v${version}` : 'v0.1.0-poc'
+    return `v${version || packageVersion}`
 })
 
 const handleLogout = async () => {
