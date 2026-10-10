@@ -5,8 +5,15 @@ The steps below cover manual installation with uv. Source builds are covered in
 the [Docker section](#docker).
 
 Use [uv](https://docs.astral.sh/uv/getting-started/installation/) and Node.js 24.
-Netra uses uv with its existing requirements files. From the repository root,
-create a Python 3.12 environment once; skip this command if `.venv` already exists:
+Clone the beta release and enter its directory:
+
+```bash
+git clone --branch v0.1.0-beta.1 https://github.com/fctr-identity/netra-ai-agent.git
+cd netra-ai-agent
+```
+
+Netra uses uv with its existing requirements files. Create a Python 3.12 environment
+once; skip this command if `.venv` already exists:
 
 ```powershell
 uv venv --python 3.12
@@ -144,8 +151,8 @@ docker compose -f docker-compose.build.yml up --build -d
 ```
 
 The source build excludes Teams dependencies by default. Set `INSTALL_TEAMS_BOT=true`
-in your configuration before building if you need them. Use the same `-f
-docker-compose.build.yml` option for subsequent source-container commands.
+in your configuration before building if you need them. Use the same
+`-f docker-compose.build.yml` option for subsequent source-container commands.
 
 To upgrade the published image, update the pinned tag in `docker-compose.yml`,
 then run `docker compose pull` and `docker compose up -d`. Back up your data first.

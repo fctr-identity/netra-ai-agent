@@ -90,7 +90,7 @@ The Compose file uses the pinned **`0.1.0-beta.1`** image for **Linux AMD64**.
 1. Clone this repository and enter its directory:
 
    ```bash
-   git clone https://github.com/fctr-identity/netra-ai-agent.git
+   git clone --branch v0.1.0-beta.1 https://github.com/fctr-identity/netra-ai-agent.git
    cd netra-ai-agent
    ```
 

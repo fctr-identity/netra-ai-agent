@@ -6,11 +6,6 @@ COPY src/frontend/ ./
 RUN npm run build
 
 FROM python:3.12-slim-bookworm
-ARG VCS_REF=unknown
-LABEL org.opencontainers.image.title="Netra - AI Agent for Microsoft Entra ID" \
-      org.opencontainers.image.version="0.1.0-beta.1" \
-      org.opencontainers.image.source="https://github.com/fctr-identity/netra-ai-agent" \
-      org.opencontainers.image.revision="${VCS_REF}"
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 COPY requirements.txt requirements-teams.txt ./
@@ -23,5 +18,10 @@ COPY main.py README.md LICENSE THIRD_PARTY_NOTICES.md ./
 COPY --from=frontend /build/src/api/static/ ./src/api/static/
 RUN useradd --create-home netra && mkdir -p sqlite_db chat_sessions logs && chown -R netra:netra /app
 USER netra
+ARG VCS_REF=unknown
+LABEL org.opencontainers.image.title="Netra - AI Agent for Microsoft Entra ID" \
+      org.opencontainers.image.version="0.1.0-beta.1" \
+      org.opencontainers.image.source="https://github.com/fctr-identity/netra-ai-agent" \
+      org.opencontainers.image.revision="${VCS_REF}"
 EXPOSE 8001
 CMD ["python", "main.py", "--host", "0.0.0.0", "--port", "8001"]
