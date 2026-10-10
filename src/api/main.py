@@ -146,7 +146,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Netra AI Agent",
     description="API for Netra AI Agent with SQL Generation capabilities",
-    version="0.1.0",
+    version="0.1.0-beta.1",
     lifespan=lifespan
 )
 

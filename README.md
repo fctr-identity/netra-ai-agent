@@ -21,7 +21,9 @@
   </p>
 
   <p>
-    <img src="./media/badges/preview.svg" alt="Early preview" width="120" height="22">
+    <a href="VERSION.md">
+      <img src="./media/badges/preview.svg" alt="v0.1.0-beta.1" width="120" height="22">
+    </a>
     <a href="docker-compose.yml">
       <img src="./media/badges/docker.svg" alt="Docker: build from source" width="170" height="22">
     </a>
@@ -54,6 +56,11 @@ Administrator questions often cross users, groups, applications, and policies.
 Netra connects those records, processes the data, and presents answers in one
 application—with a web UI, CLI, tables, and exports included.
 
+For teams evaluating Entra AI tools and MCP servers, **Netra brings the complete
+workflow into one self-hosted application**: live Graph access, fast local SQL,
+bulk processing outside the model's context, and follow-up conversations—with
+your choice of AI provider.
+
 - 📊 **More data, less model context.** Code processes the records; the model receives compact previews and focused results instead of entire intermediate datasets.
 - ⚡ **Fast SQL plus live Graph access.** Optional SQLite snapshots speed up repeat questions, while live APIs provide fresh or additional data.
 - 💬 **Keep the conversation going.** Follow up with “Now show their applications” or “Which of those users are disabled?”
@@ -61,7 +68,7 @@ application—with a web UI, CLI, tables, and exports included.
 - 🔁 **Reuse successful workflows.** When enabled, compatible saved procedures can run again, with fresh orchestration if reuse fails.
 - 🏠 **Run locally. Choose your model.** Self-host the complete application and use your preferred supported LLM provider.
 
-Netra is a POC for one commercial Entra tenant per deployment. Results depend on
+Netra is in beta for one commercial Entra tenant per deployment. Results depend on
 permissions, licensing, data freshness, and model quality. Large-tenant capacity
 and comparative performance have not yet been benchmarked.
 
