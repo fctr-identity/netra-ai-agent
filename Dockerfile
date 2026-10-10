@@ -20,7 +20,7 @@ RUN useradd --create-home netra && mkdir -p sqlite_db chat_sessions logs && chow
 USER netra
 ARG VCS_REF=unknown
 LABEL org.opencontainers.image.title="Netra AI for Microsoft Entra ID" \
-      org.opencontainers.image.version="0.1.0-beta.2" \
+      org.opencontainers.image.version="0.1.0-beta.3" \
       org.opencontainers.image.source="https://github.com/fctr-identity/netra-ai-agent" \
       org.opencontainers.image.revision="${VCS_REF}"
 EXPOSE 8001

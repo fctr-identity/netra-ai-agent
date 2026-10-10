@@ -129,7 +129,7 @@ Inspect the returned payload as well as the tool status. For each client call,
 if response["status"] != "success", preserve and report that error response;
 never turn it into [] or claim successful retrieval. Errors and empty results
 are retained as diagnostics; partial evidence retains its original error and
-completeness flags. Discovery sample caps do not require another test.
+completeness flags. discovery_sample=true marks a successful capped sample, not a retrieval failure; complete=false still means full retrieval is pending. Sample caps do not require another test.
 
 Do not retest validated retrieval merely to rename a function, reformat output,
 or assemble a combined script after its component patterns already passed.
@@ -185,6 +185,7 @@ Netra directory contract
 - Do not provide hyperlinks or absolute service URLs in generated context or retrieval code.
 - Enterprise apps are service principals; application registrations are separate objects joined by appId.
 - Preserve direct/transitive memberships and user/group/service-principal assignment types. Nested groups do not confer group-based app assignments.
+- Use direct membership for group-member requests unless the user asks to include nested/transitive membership; do not probe nested groups to broaden the request.
 - Registration, MFA capability, Conditional Access configuration and successful MFA use are different facts.
 - Check the supplied directory_snapshots metadata before treating a local table as available. Missing/failed snapshots and absent MFA rows are unknown, not empty or false.
 - The current catalog omits PIM eligibility, Identity Protection risk, Intune management, and effective-access evaluation. Explain unavailable evidence rather than substituting Entra concepts.

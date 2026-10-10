@@ -37,6 +37,11 @@ class GraphChecks(unittest.IsolatedAsyncioTestCase):
         result = await client.make_request('/users')
         self.assertEqual(len(result['data']), 3)
         self.assertFalse(result['complete'])
+        self.assertTrue(result['discovery_sample'])
+        client.test_mode = False
+        result = await client.make_request('/users', max_results=3)
+        self.assertFalse(result['complete'])
+        self.assertNotIn('discovery_sample', result)
 
     async def test_sdk_response_contract_without_network(self):
         import httpx

@@ -1,7 +1,23 @@
-# Netra AI v0.1.0-beta.2
+# Netra AI v0.1.0-beta.3
+
+Released October 10, 2026. Docker: `fctrid/netra-ai-agent-for-entra:0.1.0-beta.3`
+(Linux AMD64). The `beta` and `latest` tags follow this release.
+
+- Automatically retain API discovery evidence and exact retrieval code.
+- Distinguish successful capped discovery samples from incomplete retrieval.
+- Default group-member questions to direct membership unless nested membership is requested.
+- Clearer discovery progress messages and first-login setup-token instructions.
+- Updated frontend dependencies to resolve reported high-severity advisories.
+- Added the supported Entra entity table to the README.
+
+Validated the live ND-All-Users query against all 300 demo users, including sorting
+and enabled status. This does not establish large-tenant capacity. The image includes
+optional Teams dependencies; live Teams delivery remains unvalidated.
+
+## v0.1.0-beta.2
 
 Released October 10, 2026. Docker: `fctrid/netra-ai-agent-for-entra:0.1.0-beta.2`
-(Linux AMD64). The `beta` and `latest` tags follow this release.
+(Linux AMD64). Superseded by `0.1.0-beta.3`; the versioned image remains available.
 
 - Updated Fctr portal branding, browser icons, and Netra AI display names.
 - Removed the unused Special Tools button, dialog, and startup request from the chat UI.

@@ -554,7 +554,12 @@ def create_api_toolset(deps: APIDiscoveryDeps) -> FunctionToolset:
             await finish_test('failed' if evidence_status == 'error' else 'success')
 
             empty_result = evidence_status == 'empty'
-            result_summary = f"Test evidence saved ({evidence_status})"
+            result_summary = {
+                'available': 'Discovery sample saved; full retrieval pending',
+                'empty': 'Discovery returned no matching records',
+                'partial': 'Discovery evidence saved; incomplete retrieval needs review',
+                'error': 'Discovery request failed; diagnostic saved',
+            }[evidence_status]
             await notify_step_end(
                 f"API Test #{deps.api_tests_executed} Complete",
                 result_summary

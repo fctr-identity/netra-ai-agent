@@ -206,6 +206,8 @@ class EntraAPIClient:
                 else:
                     raise ValueError('Pagination safety limit reached before completion')
             result = {'status': 'success', 'data': data, 'complete': complete, 'count': len(data) if isinstance(data, list) else 1}
+            if self.test_mode and not complete:
+                result['discovery_sample'] = True
             record('success')
             progress('empty' if data == [] or data == {} else 'success')
             return result

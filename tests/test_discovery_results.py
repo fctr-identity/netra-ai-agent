@@ -83,6 +83,8 @@ class DiscoveryResultChecks(unittest.IsolatedAsyncioTestCase):
             ({'members': error}, 'error', 'api_test_diagnostics'),
             ({'group': success, 'members': error}, 'partial', 'api_results'),
             ({**success, 'complete': False}, 'partial', 'api_results'),
+            ({**success, 'complete': False, 'discovery_sample': True}, 'available', 'api_results'),
+            ({'members': {**success, 'complete': False, 'discovery_sample': True}, 'other': error}, 'partial', 'api_results'),
         ):
             with self.subTest(status=status, payload=payload):
                 deps = self.deps()

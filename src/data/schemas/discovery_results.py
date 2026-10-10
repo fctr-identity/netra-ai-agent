@@ -25,7 +25,8 @@ def discovery_result_status(value):
                 return False, True, False
             if item.get('status') == 'success' and 'data' in item:
                 data, error, partial = inspect(item['data'])
-                return data, error, partial or item.get('complete') is False
+                incomplete = item.get('complete') is False and item.get('discovery_sample') is not True
+                return data, error, partial or incomplete
             children = item.values()
         elif isinstance(item, list):
             children = item

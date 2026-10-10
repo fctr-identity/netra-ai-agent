@@ -21,7 +21,7 @@
   </p>
   <p>
     <a href="VERSION.md">
-      <img src="./media/badges/preview.svg" alt="v0.1.0-beta.2" width="120" height="22">
+      <img src="./media/badges/preview.svg" alt="v0.1.0-beta.3" width="120" height="22">
     </a>
     <a href="docker-compose.yml">
       <img src="./media/badges/docker.svg" alt="Docker: Linux AMD64" width="170" height="22">
@@ -138,7 +138,7 @@ uses `latest` for **Linux AMD64**. Prefer a local install? Follow the [uv guide]
 3. **Get the Docker configuration.** Clone the beta release:
 
    ```bash
-   git clone --branch v0.1.0-beta.2 https://github.com/fctr-identity/netra-ai-agent.git
+   git clone --branch v0.1.0-beta.3 https://github.com/fctr-identity/netra-ai-agent.git
    cd netra-ai-agent
    ```
 
@@ -154,9 +154,18 @@ uses `latest` for **Linux AMD64**. Prefer a local install? Follow the [uv guide]
    docker compose logs -f netra
    ```
 
-6. **[Complete first login](docs/INSTALLATION.md#first-login).** Open
-   **http://127.0.0.1:8001** and use the setup token from the logs to create your
-   local admin account. Try an [example question](#try-these-questions), or select
+6. **[Complete first login](docs/INSTALLATION.md#first-login).** On first startup,
+   look for this message in the Docker logs above:
+
+   ```text
+   [netra-ai-agent] INITIAL SETUP REQUIRED
+   [netra-ai-agent] Setup token: <your-generated-token>
+   ```
+
+   Open **http://127.0.0.1:8001**, enter that token, and create your local admin
+   account. The token is generated for your instance, is used once, and changes
+   if you restart before completing setup. After setup, sign in with your username
+   and password. Try an [example question](#try-these-questions), or select
    **Data sync → Sync now** to prepare the [optional database](docs/DATA_SYNC.md#what-netra-ai-syncs)
    for faster queries.
 

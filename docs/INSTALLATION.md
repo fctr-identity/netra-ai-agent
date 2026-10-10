@@ -8,7 +8,7 @@ Use [uv](https://docs.astral.sh/uv/getting-started/installation/) and Node.js 24
 Clone the beta release and enter its directory:
 
 ```bash
-git clone --branch v0.1.0-beta.2 https://github.com/fctr-identity/netra-ai-agent.git
+git clone --branch v0.1.0-beta.3 https://github.com/fctr-identity/netra-ai-agent.git
 cd netra-ai-agent
 ```
 
@@ -148,9 +148,9 @@ loopback. For a public HTTPS deployment, configure the proxy and set
 
 The Docker Hub repository is
 [fctrid/netra-ai-agent-for-entra](https://hub.docker.com/r/fctrid/netra-ai-agent-for-entra).
-The current beta image is `fctrid/netra-ai-agent-for-entra:0.1.0-beta.2` for Linux
+The current beta image is `fctrid/netra-ai-agent-for-entra:0.1.0-beta.3` for Linux
 AMD64. The default Compose file uses `latest`, which currently points to this beta.
-The `beta` tag also follows beta releases. Replace `latest` with `0.1.0-beta.2`
+The `beta` tag also follows beta releases. Replace `latest` with `0.1.0-beta.3`
 to pin this version. Docker Desktop runs the Linux image
 on supported Windows and macOS hosts; this release does not publish a native ARM64 image.
 
