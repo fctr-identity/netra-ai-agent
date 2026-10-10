@@ -1,6 +1,6 @@
 # Netra AI Agent
 
-Netra is an open-source AI agent in beta for asking administrator questions about Microsoft
+Netra is a source-available AI agent in beta for asking administrator questions about Microsoft
 Entra ID. It combines read-only Microsoft Graph queries with selected local
 snapshots, a conversational UI, and optional Teams personal chat.
 

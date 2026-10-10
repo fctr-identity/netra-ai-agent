@@ -101,6 +101,8 @@ devices need their listed permission for live reads; set their corresponding
 `SYNC_*` flags to `true` if they should also be copied into the database. The flags
 are listed in the [sync guide](DATA_SYNC.md#what-netra-syncs). Restart Netra after configuration changes.
 
+### AI provider configuration
+
 Configure a model provider separately. The template defaults to
 `AI_PROVIDER=openai_compatible`; set its base URL, token, reasoning model, and
 coding model in the same private `.env`:
@@ -116,6 +118,11 @@ OPENAI_COMPATIBLE_CODING_MODEL=<model-id>
 The two model IDs can be the same. Inherited provider adapters also support `openai`, `azure_openai`,
 `google`, `vertex_ai`, `anthropic`, and `bedrock`. The template includes the
 OpenAI and Azure alternatives. Choose models supporting structured tool calls.
+
+See the [provider and model guide](AI_PROVIDERS.md) for the model reference list
+and data-handling considerations.
+
+### Start the local server
 
 Start the local server:
 
@@ -155,9 +162,22 @@ The source build excludes Teams dependencies by default. Set `INSTALL_TEAMS_BOT=
 in your configuration before building if you need them. Use the same
 `-f docker-compose.build.yml` option for subsequent source-container commands.
 
-To upgrade the published image, run `docker compose pull` and `docker compose up -d`.
-If you pinned a version, update its tag in `docker-compose.yml` first. Back up your data.
-Keep the named volumes; `docker compose down -v` deletes them.
+### Upgrading
+
+Back up your database and conversation volumes and review the
+[release notes](../VERSION.md) before upgrading. If you pinned a version, update
+its tag in `docker-compose.yml` first. Then pull the image and recreate the container:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+Keep the existing named volumes to preserve accounts and saved data;
+`docker compose down -v` deletes them. Compare new settings in
+[`.env.example`](../.env.example) with your configuration without overwriting
+credentials. Without a persistent `JWT_SECRET_KEY`, restarting requires signing
+in again. Source builds use the separate Compose file described above.
 
 ## Teams
 

@@ -9,6 +9,8 @@ small, medium, and large tenants; it does not establish enterprise-scale capacit
 | --- | --- |
 | Install and start Netra | [Installation and Entra setup](INSTALLATION.md) |
 | Configure credentials and permissions | [Entra app registration](INSTALLATION.md#entra-app-registration) |
+| Choose and configure a model | [AI providers and models](AI_PROVIDERS.md) |
+| Upgrade an existing installation | [Upgrade guide](INSTALLATION.md#upgrading) |
 | See exactly what is synced | [Synced datasets and fields](DATA_SYNC.md#what-netra-syncs) |
 | Refresh snapshots, schedule sync, or use the CLI | [Data sync and CLI](DATA_SYNC.md) |
 | Understand execution, storage, and cleanup | [Runtime and data](RUNTIME_AND_DATA.md) |
